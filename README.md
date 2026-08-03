@@ -26,19 +26,32 @@
 ## 環境構築
 
 1. リポジトリのクローン(bash)
-
 ```
-git clone <ここにリポジトリURL>
+git clone https://github.com/Ma-Namba/attendance-app.git
 ```
 
-1. 環境設定ファイルの作成(bash)
-
+2. 環境設定ファイルの作成(bash)
+.env.exampleをコピーして.envを作成する。
 ```
 cd attendance-app
 cp .env.example .env
 ```
+.env ファイル内の以下のDB接続情報を確認・設定します。<br>
+.env.example のデフォルト値はSail向けではないため、以下のように変更してください。
+```
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-1. Laravel Sail（mysql, mailpit）のインストール(bash)
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+```
+
+3. Laravel Sail（mysql, mailpit）のインストール(bash)
 
 ```
 ‌docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html \
@@ -47,42 +60,46 @@ cp .env.example .env
 # Apple Silicon(M1/M2/M3/M4等)の場合は compose.yaml の mysql に「platform: 'linux/amd64'」を追記。
 ```
 
-1. Dockerコンテナのビルドと起動(bash)
+4. Dockerコンテナのビルドと起動(bash)
 
 ```
 ./vendor/bin/sail up -d
 ```
 
-1. アプリケーションキーの生成(bash)
+5. アプリケーションキーの生成(bash)
 
 ```
 ./vendor/bin/sail up -d
 ```
 
-1. マイグレーションとシーダーの実行
+6. マイグレーションとシーダーの実行
 
 ```
 ./vendor/bin/sail artisan migrate:fresh --seed
 ```
 
-1. フロントエンドのビルドと起動
+7. フロントエンドのビルドと起動
 
 ```
 ‌./vendor/bin/sail npm install
 ./vendor/bin/sail npm run dev
 ```
 
-1. 動作確認
+8. 動作確認
 
-全てのテストを実行し、Failがないことを確認する。
-
-```
-./vendor/bin/sail test
-```
 
 ブラウザで以下のアプリケーションURLを開き、画面が表示されれば完了
 
 [http://localhost](http://localhost)
+
+## テスト実行
+```
+./vendor/bin/sail test
+```
+カバレッジ付きで実行する場合：
+```
+sail artisan test --coverage
+```
 
 ## 使用技術
 - PHP 8.2
