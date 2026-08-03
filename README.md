@@ -125,6 +125,7 @@ varchar_255 email UK
 timestamp email_vertified_at
 varchar_255 password
 varchar_100 remember_token
+boolean is_admin
 timestamp created_at
 timestamp updated_at
 }
