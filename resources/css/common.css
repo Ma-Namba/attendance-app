@@ -1,0 +1,41 @@
+* {
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.header {
+    background: #000;
+    width: 100%;
+}
+
+.header__inner {
+    align-items: center;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.inner__group--item {
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.inner__group--item:not(:last-child) {
+    margin-right: 10px;
+}
+
+.logout-button {
+    background: #000;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    padding: 0;
+}
+main{
+    min-height: 100vh;
+}

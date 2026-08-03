@@ -1,0 +1,123 @@
+.detail__content {
+    background: #f0eff2;
+    margin: 0 auto;
+    max-width: 1540px;
+    min-height: 100vh;
+    padding: 50px;
+    padding-top: 50px;
+}
+
+.detail__header {
+    border-left: 7px solid #000;
+    margin: 0 auto 45px;
+    max-width: 100vh;
+    padding-left: 5px;
+}
+
+.applied-form {
+    margin: 0 auto;
+    max-width: 100vh;
+}
+
+.applied-form__content {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 10px;
+}
+
+.applied-form__group {
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    align-items: center;
+    height: auto;
+    padding: 1rem 0;
+}
+
+.applied-form__group:not(:last-of-type) {
+    border-bottom: 2px solid #e1e1e1;
+}
+
+.applied-form__header {
+    color: #737373;
+    font-weight: bold;
+    padding-left: 80px;
+    width: 100%;
+}
+
+.applied-form__input-group {
+    display: flex;
+    align-items: center;
+    /* 名前(1個)・日付(2個)・時間(3個)など子要素数が異なる行でも、値カラムの
+       開始位置(start)を全行そろえるため、space-between をやめ左寄せ(flex-start)にする */
+    justify-content: flex-start;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+.applied-form__input,
+.applied-form__textarea {
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.applied-form__input {
+    border: none;
+    height: 30px;
+    outline: none;
+    padding: 5px;
+    text-align: center;
+    width: 80px;
+}
+
+.applied-form__textarea {
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 50px;
+    padding: 5px;
+    resize: none;
+}
+
+.applied-form__text {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.applied-form__text--item {
+    color: #ff0000;
+}
+
+.applied-form__button {
+    margin-top: 50px;
+    text-align: right;
+}
+
+.applied-form__button--submit {
+    background: #000;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px 20px;
+}
+
+.applied-form__item {
+    background: #696969;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 0;
+    padding: 7px 20px;
+}
+
+.applied-form__input-group p {
+    margin: 0;
+    padding: 0 0.5rem;
+}
