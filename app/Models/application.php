@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\ApprovalStatus
+use App\Enums\ApprovalStatus;
 
 class application extends Model
 {
@@ -19,7 +19,7 @@ class application extends Model
         'new_check_out',
         'proposalBreaks',
         'comment',
-        'status',
+        'approval_status', //誤字修正
     ];
 
     // 🌟 approval_statusをEnumクラスとしてキャストする
