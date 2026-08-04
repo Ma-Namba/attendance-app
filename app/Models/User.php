@@ -42,4 +42,33 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    // リレーション：1人のユーザーは複数の勤怠データを持つ
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    // リレーション：1人のユーザーは複数の修正申請を持つ
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    /**
+     * データベースにはない「attendance_status」プロパティを動的に生み出す（アクセサ）
+     * @return string
+     */
+    public function getAttendanceStatusAttribute(): string
+    {
+        $today = now()->format('Y-m-d');
+        $attendance = $this->attendances()->where('date', $today)->first();
+
+        if (!$attendance){
+            return '勤務外';
+        }
+        // レコードがある場合は、Attendanceモデルの「getCurrentStatus()」を実行して返す
+        return $attendance->getCurrentStatus();
+
+    }
 }
