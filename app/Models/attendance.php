@@ -54,7 +54,8 @@ class attendance extends Model
      */
     public function application()
     {
-        return $this->hasOne(Application::class);
+        // 1対1 (hasOne) から 1対多 (hasMany) に変更
+        return $this->hasMany(Application::class);
     }
 
     /**
@@ -143,5 +144,13 @@ class attendance extends Model
         $hours = floor($netMinutes / 60);
         $minutes = $netMinutes % 60;
         return sprintf('%02d:%02d:00', $hours, $minutes);
+    }
+
+    /**
+     * 現在承認待ちの申請があるかどうかを判定するカスタム属性
+     */
+    public function getHasPendingApplicationAttribute()
+    {
+        return $this->applications()->where('status', 'pending')->exists();
     }
 }

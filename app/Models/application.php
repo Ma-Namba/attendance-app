@@ -30,7 +30,7 @@ class application extends Model
         'proposed_breaks' => 'array', // DBのJSON文字列をPHPの配列(array)に自動変換
     ];
 
-    // リレーション：親である勤怠データを取得（1対1の対になる相手）
+    // リレーション：親である勤怠データを取得（1対多の対になる相手）
     public function attendance()
     {
         return $this->belongsTo(Attendance::class);
