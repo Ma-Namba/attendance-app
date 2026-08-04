@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\ApprovalStatus
 
 class application extends Model
 {
@@ -16,18 +17,14 @@ class application extends Model
         'user_id',
         'new_check_in',
         'new_check_out',
-        'proposed_breaks',
+        'proposalBreaks',
         'comment',
         'status',
     ];
 
-    /**
-     * キャストする属性
-     *
-     * @var array<string, string>
-     */
+    // 🌟 approval_statusをEnumクラスとしてキャストする
     protected $casts = [
-        'proposed_breaks' => 'array', // DBのJSON文字列をPHPの配列(array)に自動変換
+        'approval_status' => ApprovalStatus::class,
     ];
 
     // リレーション：親である勤怠データを取得（1対多の対になる相手）

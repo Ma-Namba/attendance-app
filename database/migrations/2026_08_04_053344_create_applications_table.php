@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('attendance_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
+
             // 出退勤の修正後の希望時刻
             $table->time('new_clock_in')->nullable();
             $table->time('new_clock_out')->nullable();
 
             // 複数の休憩の修正案(JSON形式)
-            $table->json('proposalBreaks')->nullable();
+            $table->text('proposalBreaks')->nullable();
 
             // 修正のコメント
             $table->string('comment');

@@ -151,12 +151,12 @@ erDiagram
     applications {
         bigint_unsigned id PK
         bigint_unsigned attendance_id FK
-        bigint_unsigned user_id FK
-        varchar_255 status "※承認待ち/承認済み"
+        bigint_unsigned user_id FK "※Eager Load用に追加"
+        enum approval_status "※'承認待ち'/'承認済み'"
         date new_date
         time new_clock_in
         time new_clock_out
-        json proposal_breaks "※json型に変更・スネークケース化"
+        text proposal_breaks "※text型・スネークケース"
         varchar_255 comments
         timestamp created_at
         timestamp updated_at
