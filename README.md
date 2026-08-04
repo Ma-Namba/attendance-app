@@ -110,13 +110,13 @@ sail artisan test --coverage
 - Vite / Tailwind CSS 3.4
 - Laravel Fortify（認証）
 - phpMyAdmin
-  
+
 ## ER図
 ```mermaid
 erDiagram
 users ||--o{ attendances: "1人のユーザーは複数の勤怠情報を持つ"
 users ||--o{ applications:"1人のユーザーは複数の修正申請を持つ"
-attendances ||--o{ breaks:"1日の勤怠情報は複数の休憩情報を持つ"
+attendances ||--o{ attendance_breaks:"1日の勤怠情報は複数の休憩情報を持つ"
 
     users{
 bigint_unsigned id PK
@@ -125,7 +125,15 @@ varchar_255 email UK
 timestamp email_vertified_at
 varchar_255 password
 varchar_100 remember_token
-boolean is_admin
+timestamp created_at
+timestamp updated_at
+}
+    admins{
+bigint_unsigned id PK
+varchar_255 name
+varchar_255 email UK
+varchar_255 password
+varchar_100 remember_token
 timestamp created_at
 timestamp updated_at
 }
@@ -135,26 +143,28 @@ bigint_unsigned user_id FK
 date date
 time clock_in
 time clock_out
+json new_breaks
 timestamp created_at
 timestamp updated_at
 }
     applications{
 bigint_unsigned id PK
-bigint_unsigned user_id FK
 bigint_unsigned attendance_id FK
 date new_date
 time new_clock_in
 time new_clock_out
-varchar_255 approval_status
 text proposalBreaks
+varchar_255 comments
 timestamp created_at
 timestamp updated_at
 }
-    breaks{
+    attendance_breaks{
 bigint_unsigned id PK
 bigint_unsigned attendance_id FK
 time break_in
 time break_out
+timestamp created_at
+timestamp updated_at
 }
 ```
 
