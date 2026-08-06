@@ -153,10 +153,9 @@ erDiagram
         bigint_unsigned attendance_id FK
         bigint_unsigned user_id FK "※Eager Load用に追加"
         enum approval_status "※'承認待ち'/'承認済み'"
-        date new_date
         time new_clock_in
         time new_clock_out
-        text proposal_breaks "※text型・スネークケース"
+        text proposalBreaks "※text型・スネークケース"
         varchar_255 comments
         timestamp created_at
         timestamp updated_at

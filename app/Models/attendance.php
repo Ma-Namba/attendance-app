@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\ApprovalStatus;
 
-class attendance extends Model
+class Attendance extends Model
 {
     use HasFactory;
 
@@ -44,18 +46,18 @@ class attendance extends Model
     /**
      * リレーション：複数の休憩データを持つ
      */
-    public function attendance_break()
+    public function attendanceBreaks(): HasMany
     {
-        return $this->hasMany(attendance_break::class);
+        return $this->hasMany(attendance_break::class, 'attendance_id');
     }
 
     /**
      * リレーション：1つの修正申請を持つ
      */
-    public function application()
+    public function applications(): HasMany
     {
         // 1対1 (hasOne) から 1対多 (hasMany) に変更
-        return $this->hasMany(Application::class);
+        return $this->hasMany(Application::class, 'attendance_id');
     }
 
     /**
@@ -63,12 +65,12 @@ class attendance extends Model
      */
     public function getCurrentStatus():string
     {
-        if (!$this->check_in) {
+        if (!$this->clock_in) {
             return '勤務外';
         }
-        if ($this->check_in && !$this->check_out) {
+        if ($this->clock_in && !$this->clock_out) {
             $latestBreak = $this->attendanceBreaks()->latest()->first();
-            if ($latestBreak && !$latestBreak->break_end) {
+            if ($latestBreak && !$latestBreak->break_out) {
                 return '休憩中'; // ← ここで「休憩中」が返る
             }
             return '出勤中';     // ← ここで「出勤中」が返る
@@ -77,22 +79,17 @@ class attendance extends Model
     }
 
     /**
-     * 合計休憩時間をリアルタイムに計算して返すアクセサ:total_break_time
-     *
-     * @return string|null
+     * 合計休憩時間をリアルタイムに計算して返すアクセサ
      */
     public function getTotalBreakTimeAttribute(): ?string
     {
         $totalMinutes = 0;
 
-        // 紐づくすべての休憩レコードをループで回す
+        // リレーション名とカラム名を修正（break_in, break_out）
         foreach ($this->attendanceBreaks as $break) {
-            // 休憩戻り（break_end）がしっかり記録されている場合のみ計算
-            if ($break->break_start && $break->break_end) {
-                $start = Carbon::parse($break->break_start);
-                $end = Carbon::parse($break->break_end);
-
-                // 差分の分（分単位）を足していく
+            if ($break->break_in && $break->break_out) {
+                $start = Carbon::parse($break->break_in);
+                $end = Carbon::parse($break->break_out);
                 $totalMinutes += $start->diffInMinutes($end);
             }
         }
@@ -101,46 +98,40 @@ class attendance extends Model
             return null;
         }
 
-        // 「H:i:s」の形式の文字列に変換して返す
         $hours = floor($totalMinutes / 60);
         $minutes = $totalMinutes % 60;
         return sprintf('%02d:%02d:00', $hours, $minutes);
     }
 
     /**
-     * 合計実働時間（退勤 - 出勤 - 休憩合計）をリアルタイムに計算して返すアクセサ:total_time
-     *
-     * @return string|null
+     * 合計実働時間をリアルタイムに計算して返すアクセサ
      */
     public function getTotalTimeAttribute(): ?string
     {
-        // 出勤と退勤が揃っていない場合は計算できないので null を返す
-        if (!$this->check_in || !$this->check_out) {
+        // カラム名を clock_in, clock_out に修正
+        if (!$this->clock_in || !$this->clock_out) {
             return null;
         }
 
-        $checkIn = Carbon::parse($this->check_in);
-        $checkOut = Carbon::parse($this->check_out);
+        $clockIn = Carbon::parse($this->clock_in);
+        $clockOut = Carbon::parse($this->clock_out);
 
-        // 拘束時間（出勤から退勤までの総分数）を計算
-        $grossMinutes = $checkIn->diffInMinutes($checkOut);
+        $grossMinutes = $clockIn->diffInMinutes($clockOut);
 
-        // 先ほど作った「合計休憩時間」のアクセサを呼び出して、休憩の総分数を出す
+        // カラム名を break_in, break_out に修正
         $breakMinutes = 0;
         foreach ($this->attendanceBreaks as $break) {
-            if ($break->break_start && $break->break_end) {
-                $breakMinutes += Carbon::parse($break->break_start)->diffInMinutes(Carbon::parse($break->break_end));
+            if ($break->break_in && $break->break_out) {
+                $breakMinutes += Carbon::parse($break->break_in)->diffInMinutes(Carbon::parse($break->break_out));
             }
         }
 
-        // 実働時間 ＝ 拘束時間 ー 休憩時間
         $netMinutes = $grossMinutes - $breakMinutes;
 
         if ($netMinutes < 0) {
             return '00:00:00';
         }
 
-        // 「H:i:s」の形式の文字列に変換して返す
         $hours = floor($netMinutes / 60);
         $minutes = $netMinutes % 60;
         return sprintf('%02d:%02d:00', $hours, $minutes);
@@ -149,8 +140,11 @@ class attendance extends Model
     /**
      * 現在承認待ちの申請があるかどうかを判定するカスタム属性
      */
-    public function getHasPendingApplicationAttribute()
+    public function getHasPendingApplicationAttribute(): bool
     {
-        return $this->applications()->where('status', 'pending')->exists();
+        // メソッド名を applications() に、カラム名を approval_status に、値をEnumに修正
+        return $this->applications()
+            ->where('approval_status', ApprovalStatus::PENDING)
+            ->exists();
     }
 }

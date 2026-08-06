@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\ApprovalStatus;
 
-class application extends Model
+class Application extends Model
 {
     /**
      * 複数代入を許可する属性
@@ -22,10 +22,10 @@ class application extends Model
         'approval_status', //誤字修正
     ];
 
-    // 🌟 approval_statusをEnumクラスとしてキャストする
+    // approval_statusをEnumクラスとしてキャストする
     protected $casts = [
         'approval_status' => ApprovalStatus::class,
-        'proposal_breaks' => 'array',
+        'proposal_breaks' => 'json',
     ];
 
     // リレーション：親である勤怠データを取得（1対多の対になる相手）

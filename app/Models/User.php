@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -44,13 +45,13 @@ class User extends Authenticatable
     ];
 
     // リレーション：1人のユーザーは複数の勤怠データを持つ
-    public function attendances()
+    public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }
 
     // リレーション：1人のユーザーは複数の修正申請を持つ
-    public function applications()
+    public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }

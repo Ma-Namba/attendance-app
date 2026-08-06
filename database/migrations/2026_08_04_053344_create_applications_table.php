@@ -20,11 +20,11 @@ return new class extends Migration
             $table->time('new_clock_in')->nullable();
             $table->time('new_clock_out')->nullable();
 
-            // 複数の休憩の修正案(TEXT形式)
+            // 修正後の休憩JSON
             $table->text('proposalBreaks')->nullable();
 
             // 修正のコメント
-            $table->string('comment');
+            $table->string('comments')->nullable();
 
             // 承認待ち,承認済
             $table->enum('approval_status', ['承認待ち', '承認済み'])->default('承認待ち');
