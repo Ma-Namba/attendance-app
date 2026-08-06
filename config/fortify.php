@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'guard' => 'web',
+    'guard' => request()->is('admin*') ? 'admin' : 'web',
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +73,10 @@ return [
     |
     */
 
-    'home' => '/home',
+    // ログイン成功後の遷移先
+    // 一般ユーザー：出勤登録画面（/attendance）
+    // 管理者：勤怠一覧画面（/admin/attendance/list）
+    'home' => request()->is('admin*') ? '/admin/attendance/list' : '/attendance',
 
     /*
     |--------------------------------------------------------------------------
@@ -147,8 +150,8 @@ return [
         Features::registration(),
         Features::resetPasswords(),
         // Features::emailVerification(),
-        // Features::updateProfileInformation(),
-        // Features::updatePasswords(),
+        Features::updateProfileInformation(),
+        Features::updatePasswords(),
         // Features::twoFactorAuthentication([
             // 'confirm' => true,
             // 'confirmPassword' => true,

@@ -48,14 +48,41 @@ class FortifyServiceProvider extends ServiceProvider
         //     return Limit::perMinute(5)->by($request->session()->get('login.id'));
         // });
 
-        // ログインフォームのビューを指定
+        // ログイン画面（一般ユーザー / 管理者）
         Fortify::loginView(function () {
-            return view('user.user-login');
+            if (request()->is('admin*')) {
+                return view('admin.admin-login'); // /admin/login
+            }
+            return view('user.user-login'); // /login
         });
 
-        // ユーザー登録フォームのビューを指定
+        // 会員登録画面（一般ユーザーのみ）
         Fortify::registerView(function () {
             return view('user.register');
+        });
+
+        // 認証処理（マルチガード対応）
+        Fortify::authenticateUsing(function (Request $request) {
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+            ]);
+
+            // 管理者ログイン時の処理
+            if ($request->is('admin*')) {
+                $admin = Admin::where('email', $request->email)->first();
+                if ($admin && Hash::check($request->password, $admin->password)) {
+                    return $admin;
+                }
+            }
+            // 一般ユーザーログイン時の処理
+            else {
+                $user = User::where('email', $request->email)->first();
+                if ($user && Hash::check($request->password, $user->password)) {
+                    return $user;
+                }
+            }
+            return null;
         });
     }
 }
