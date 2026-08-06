@@ -1,0 +1,60 @@
+<?php
+
+namespace Database\Factories;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Attendance_break;
+use App\Models\Attendance;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Attendance>
+ */
+class AttendanceFactory extends Factory
+{
+    protected $model = Attendance::class;
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'user_id' => null, // シーダーから注入
+            'date' => null,    // シーダーから注入
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+            'new_breaks' => null, // afterCreatingで自動同期
+        ];
+    }
+
+    /**
+     * 紐づく休憩データ（JSON & 子テーブル）を完全同期生成する
+     */
+    public function configure()
+    {
+        return $this->afterCreating(function (Attendance $attendance) {
+            // 退勤時刻がある場合のみ休憩を生成（拡張性を考慮）
+            if ($attendance->clock_out) {
+                // 固定休憩 12:00 - 13:00
+                $breakData = [
+                    ['break_in' => '12:00:00', 'break_out' => '13:00:00']
+                ];
+
+                // 1. 子テーブル (attendance_breaks) へ保存
+                foreach ($breakData as $b) {
+                    Attendance_break::create([
+                        'attendance_id' => $attendance->id,
+                        'break_in' => $b['break_in'],
+                        'break_out' => $b['break_out'],
+                    ]);
+                }
+
+                // 2. 親テーブルのJSONカラム (new_breaks) へ同期保存
+                $attendance->update([
+                    'new_breaks' => $breakData
+                ]);
+            }
+        });
+    }
+}
