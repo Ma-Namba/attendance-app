@@ -144,7 +144,7 @@ erDiagram
         date date "※user_idとの複合UK"
         time clock_in
         time clock_out
-        json new_breaks
+        text new_breaks
         timestamp created_at
         timestamp updated_at
     }
