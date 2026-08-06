@@ -20,7 +20,7 @@ return new class extends Migration
             $table->time('new_clock_in')->nullable();
             $table->time('new_clock_out')->nullable();
 
-            // 複数の休憩の修正案(JSON形式)
+            // 複数の休憩の修正案(TEXT形式)
             $table->text('proposalBreaks')->nullable();
 
             // 修正のコメント

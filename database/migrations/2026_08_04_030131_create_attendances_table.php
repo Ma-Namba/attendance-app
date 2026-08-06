@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('date'); //勤務日(例: 2026-08-04)
             $table->time('clock_in'); //出勤時刻
             $table->time('clock_out'); //退勤時刻
-            $table->json(new_breaks)->nullable();
+            $table->text('new_breaks')->nullable();
             $table->timestamps();
 
             // 1ユーザー1日1レコードを保証する一意制約
