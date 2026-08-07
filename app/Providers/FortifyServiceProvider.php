@@ -63,7 +63,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // ログイン画面（一般ユーザー / 管理者）
         Fortify::loginView(function () use ($request) {
-            if (request()->is('admin*')) {
+            if (request()->is('admin*') || request()->is('admin/login')) {
                 return view('admin.admin-login'); // /admin/login
             }
             return view('user.user-login'); // /login
