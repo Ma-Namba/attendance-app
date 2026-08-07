@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             // 出退勤の修正後の希望時刻
-            $table->time('new_clock_in')->nullable();
-            $table->time('new_clock_out')->nullable();
+            $table->datetime('new_clock_in')->nullable();
+            $table->datetime('new_clock_out')->nullable();
 
             // 修正後の休憩JSON
             $table->text('proposalBreaks')->nullable();

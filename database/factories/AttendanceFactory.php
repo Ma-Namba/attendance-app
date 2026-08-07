@@ -22,9 +22,14 @@ class AttendanceFactory extends Factory
         return [
             'user_id' => null, // シーダーから注入
             'date' => null,    // シーダーから注入
-            'clock_in' => '09:00:00',
-            'clock_out' => '18:00:00',
-            'new_breaks' => null, // afterCreatingで自動同期
+            'clock_in' => function (array $attributes) {
+                $dateStr = $attributes['date'] ?? now()->format('Y-m-d');
+                $this->faker->dateTimeBetween("{$dateStr} 09:00:00", "{$dateStr} 10:00:00");
+            },
+            'clock_out' => function (array $attributes) {
+                $dateStr = $attributes['date'] ?? now()->format('Y-m-d');
+                $this->faker->dateTimeBetween("{$dateStr} 17:00:00", "{$dateStr} 18:00:00");
+            },
         ];
     }
 
@@ -36,9 +41,16 @@ class AttendanceFactory extends Factory
         return $this->afterCreating(function (Attendance $attendance) {
             // 退勤時刻がある場合のみ休憩を生成（拡張性を考慮）
             if ($attendance->clock_out) {
-                // 固定休憩 12:00 - 13:00
+                $dateStr = is_string($attendance->date)
+                    ? $attendance->date
+                    : $attendance->date->format('Y-m-d');
+
+                // 日付と固定時間を結合して、固定休憩 12:00 - 13:00
                 $breakData = [
-                    ['break_in' => '12:00:00', 'break_out' => '13:00:00']
+                    [
+                        'break_in' => '12:00:00',
+                        'break_out' => '13:00:00'
+                    ]
                 ];
 
                 // 1. 子テーブル (attendance_breaks) へ保存
@@ -49,11 +61,6 @@ class AttendanceFactory extends Factory
                         'break_out' => $b['break_out'],
                     ]);
                 }
-
-                // 2. 親テーブルのJSONカラム (new_breaks) へ同期保存
-                $attendance->update([
-                    'new_breaks' => $breakData
-                ]);
             }
         });
     }

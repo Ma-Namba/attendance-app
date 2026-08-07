@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('attendance_breaks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('attendance_id')->constrained()->onDelete('cascade'); //attendancesと紐づけ(attendanceが消えたら休憩も消える)
-            $table->time('break_in'); //休憩入り時刻
-            $table->time('break_out')->nullable(); //休憩戻り時刻
+            $table->datetime('break_in'); //休憩入り時刻
+            $table->datetime('break_out')->nullable(); //休憩戻り時刻
             $table->timestamps();
         });
     }

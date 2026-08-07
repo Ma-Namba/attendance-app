@@ -1,7 +1,7 @@
 <?php
 
 use Laravel\Fortify\Features;
-
+use App\Providers\RouteServiceProvider;
 return [
 
     /*
@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'guard' => request()->is('admin*') ? 'admin' : 'web',
+    'guard' => 'web',
 
     /*
     |--------------------------------------------------------------------------
@@ -76,7 +76,7 @@ return [
     // ログイン成功後の遷移先
     // 一般ユーザー：出勤登録画面（/attendance）
     // 管理者：勤怠一覧画面（/admin/attendance/list）
-    'home' => request()->is('admin*') ? '/admin/attendance/list' : '/attendance',
+    'home' => RouteServiceProvider::HOME,
 
     /*
     |--------------------------------------------------------------------------

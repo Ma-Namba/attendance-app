@@ -30,7 +30,7 @@ class FortifyServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(Request $request): void
     {
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
@@ -48,8 +48,21 @@ class FortifyServiceProvider extends ServiceProvider
         //     return Limit::perMinute(5)->by($request->session()->get('login.id'));
         // });
 
+        // リクエストURLに応じた設定の動的切り替え
+        if ($request->is('admin*') || $request->is('api/admin*')) {
+            config([
+                'fortify.guard' => 'admin',                     // 管理者用のガードを適用
+                'fortify.home' => RouteServiceProvider::ADMIN_HOME, // 管理者用のリダイレクト先
+            ]);
+        } else {
+            config([
+                'fortify.guard' => 'web',
+                'fortify.home' => RouteServiceProvider::HOME,
+            ]);
+        }
+
         // ログイン画面（一般ユーザー / 管理者）
-        Fortify::loginView(function () {
+        Fortify::loginView(function () use ($request) {
             if (request()->is('admin*')) {
                 return view('admin.admin-login'); // /admin/login
             }

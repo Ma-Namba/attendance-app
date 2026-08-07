@@ -63,6 +63,8 @@ class DatabaseSeeder extends Seeder
                 continue;
             }
 
+            $dateStr = $date->toDateString(); // "2026-03-02" などの文字列を取得
+
             foreach ($generalUsers as $user) {
 
                 // 本日のデータはまだ退勤していない状態（出勤中）にするなど、実運用に合わせる
@@ -70,10 +72,9 @@ class DatabaseSeeder extends Seeder
                     // 本日は出勤打刻のみ（退勤なし・休憩なしの状態）
                     Attendance::create([
                         'user_id' => $user->id,
-                        'date' => $date->toDateString(),
-                        'clock_in' => '09:00:00',
+                        'date' => $dateStr,
+                        'clock_in' => "{$dateStr} 09:00:00",
                         'clock_out' => null,
-                        'new_breaks' => null,
                     ]);
                     continue;
                 }
@@ -88,8 +89,6 @@ class DatabaseSeeder extends Seeder
                 Attendance::factory()->create([
                     'user_id' => $user->id,
                     'date' => $date->toDateString(),
-                    'clock_in' => '09:00:00',
-                    'clock_out' => '18:00:00',
                 ]);
             }
         }
