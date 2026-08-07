@@ -25,7 +25,7 @@ class Application extends Model
     // approval_statusをEnumクラスとしてキャストする
     protected $casts = [
         'approval_status' => ApprovalStatus::class,
-        'proposal_breaks' => 'json',
+        'proposalBreaks' => 'json',
     ];
 
     // リレーション：親である勤怠データを取得（1対多の対になる相手）

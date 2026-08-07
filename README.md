@@ -142,9 +142,8 @@ erDiagram
         bigint_unsigned id PK
         bigint_unsigned user_id FK
         date date "※user_idとの複合UK"
-        time clock_in
-        time clock_out
-        text new_breaks
+        datetime clock_in
+        datetime clock_out
         timestamp created_at
         timestamp updated_at
     }
@@ -153,9 +152,9 @@ erDiagram
         bigint_unsigned attendance_id FK
         bigint_unsigned user_id FK "※Eager Load用に追加"
         enum approval_status "※'承認待ち'/'承認済み'"
-        time new_clock_in
-        time new_clock_out
-        text proposalBreaks "※text型・スネークケース"
+        datetime new_clock_in
+        datetime new_clock_out
+        text proposalBreaks "※text型"
         varchar_255 comments
         timestamp created_at
         timestamp updated_at
@@ -163,8 +162,8 @@ erDiagram
     attendance_breaks {
         bigint_unsigned id PK
         bigint_unsigned attendance_id FK
-        time break_in
-        time break_out
+        datetime break_in
+        datetime break_out
         timestamp created_at
         timestamp updated_at
     }
