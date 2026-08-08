@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins', // 下で定義するprovider名と一致させます
+        ],
     ],
 
     /*
@@ -65,6 +69,10 @@ return [
             'model' => App\Models\User::class,
         ],
 
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class, // Adminモデルを指定
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
