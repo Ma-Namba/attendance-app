@@ -62,11 +62,13 @@ class FortifyServiceProvider extends ServiceProvider
         }
 
         // ログイン画面（一般ユーザー / 管理者）
-        Fortify::loginView(function () use ($request) {
-            if (request()->is('admin*')) {
-                return view('admin.admin-login'); // /admin/login
+        Fortify::loginView(function (Request $request) {
+            // 配列を使うことで、'admin' と 'admin/login'（または admin/*）のみに限定できます
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return view('admin.admin-login');
             }
-            return view('user.user-login'); // /login
+
+            return view('user.user-login');
         });
 
         // 会員登録画面（一般ユーザーのみ）
