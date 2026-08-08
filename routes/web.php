@@ -26,4 +26,4 @@ Route::get('/login', function () {
 
 Route::get('/attendance', [AttendanceController::class, 'create'])->name('attendance.create');
 
-Route::get('/', [AttendanceController::class, 'create'])->name('attendance.create');
+Route::redirect('/', '/login');
