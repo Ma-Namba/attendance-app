@@ -16,6 +16,8 @@ use Laravel\Fortify\Fortify;
 use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Responses\LoginResponse; // 追加
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract; // 追加
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -61,15 +63,13 @@ class FortifyServiceProvider extends ServiceProvider
             ]);
         }
 
-        // ログイン画面（一般ユーザー / 管理者）
-        Fortify::loginView(function (Request $request) {
-            // 配列を使うことで、'admin' と 'admin/login'（または admin/*）のみに限定できます
-            if ($request->is('admin') || $request->is('admin/*')) {
-                return view('admin.admin-login');
-            }
-
+        // ログイン画面（一般ユーザー）
+        Fortify::loginView(function () {
             return view('user.user-login');
         });
+
+        // --- 追加：ログインレスポンスのカスタムバインド ---
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
 
         // 会員登録画面（一般ユーザーのみ）
         Fortify::registerView(function () {

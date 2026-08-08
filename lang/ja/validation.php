@@ -99,7 +99,7 @@ return [
     'password' => 'パスワードが間違っています。',
     'present' => ':attributeが存在する必要があります。',
     'regex' => ':attributeは無効な形式です。',
-    'required' => ':attributeは必須です。',
+    'required' => ':attributeを入力してください。',
     'required_if' => ':otherが:valueの場合、:attributeは必須です。',
     'required_unless' => ':otherが:valueではない場合、:attributeは必須です。',
     'required_with' => ':valuesのうち一つでも存在する場合、:attributeは必須です。',
