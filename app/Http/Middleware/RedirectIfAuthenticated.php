@@ -18,9 +18,15 @@ class RedirectIfAuthenticated
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
         $guards = empty($guards) ? [null] : $guards;
-
+        //「ゲスト向けミドルウェア（RedirectIfAuthenticated）」誤作動の修正(/admin/loginアクセスで/loginへの強制遷移修正)
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                // adminガードでログイン済みの場合は管理者ダッシュボードへ
+                if ($guard === 'admin') {
+                    return redirect()->route('admin.attendance.list');
+                }
+
+                // それ以外（一般ユーザー）は RouteServiceProvider::HOME （通常は /）へ
                 return redirect(RouteServiceProvider::HOME);
             }
         }
