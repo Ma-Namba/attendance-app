@@ -17,7 +17,7 @@ class UserRegisterTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_バリデーションメッセージの検証（異常系）(): void
+    public function test_会員登録画面でバリデーションメッセージの検証（異常系）(): void
     {
         // 1-1. 空のデータを送信して必須バリデーションを検証
         $response = $this->post('/register', [
