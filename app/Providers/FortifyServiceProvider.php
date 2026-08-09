@@ -63,8 +63,12 @@ class FortifyServiceProvider extends ServiceProvider
             ]);
         }
 
-        // ログイン画面（一般ユーザー）
-        Fortify::loginView(function () {
+        // ログイン画面の切り替え設定(一般ユーザー/管理者)
+        Fortify::loginView(function (Request $request) {
+            // URLに 'admin' が含まれる場合は管理者用Blade、それ以外は一般用Bladeを返す
+            if ($request->is('admin*')) {
+                return view('admin.admin-login'); // 既存の管理者用Bladeを指定
+            }
             return view('user.user-login');
         });
 

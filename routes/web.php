@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminAuthController;
 use Laravel\Fortify\Fortify;
+use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Attendance;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,14 +31,33 @@ Route::middleware(['auth'])->group(function () {
     // Route::post('/attendance/break-out', [AttendanceController::class, 'breakOut'])->name('attendance.break-out');
 });
 
-// 管理者専用ルーティング（参考用）
-// 管理者用のログイン関連（未ログイン時のみアクセス可能にするため guest:admin ミドルウェアを推奨）
+// 管理者ゲスト（未ログイン）向けルート
 Route::middleware(['guest:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // 管理者ログイン画面の表示
-    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    // ログイン画面表示（FortifyServiceProviderのloginViewが呼ばれます）
+    Route::get('/login', function () {
+        return view('admin.admin-login');
+    })->name('login');
 
-    // 管理者ログイン処理（送信先）
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    // ログイン処理実行
+    Route::post('/login', [AdminAuthController::class, 'store']);
 });
+
+// 管理者認証済み向けルート（ログアウトなど）
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::post('/logout', [AdminAuthController::class, 'destroy'])->name('logout');
+
+    // ログイン後のダッシュボード（遷移先）
+    Route::get('/admin/attendance/list', function () {
+        //ビューに渡すデータの取得
+        $date = Carbon::today();
+        $previousDay = $date->copy()->subDay();
+        $nextDay = $date->copy()->addDay();
+        $users = User::all();
+        $attendanceRecords = Attendance::all();
+
+        return view('admin.admin-attendance-list', compact('date', 'previousDay', 'nextDay', 'users', 'attendanceRecords')); // 管理者トップ画面
+    })->name('attendance.list');
+});
+
 // 未ログイン時のトップページ（またはログイン画面へリダイレクト）
 Route::redirect('/', '/login');
