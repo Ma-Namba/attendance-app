@@ -24,11 +24,8 @@ Route::middleware(['auth'])->group(function () {
     // 勤怠管理メイン画面（ログイン後のリダイレクト先）
     Route::get('/attendance', [AttendanceController::class, 'create'])->name('attendance.create');
 
-    // 今後実装する打刻用アクションのルーティング枠
-    // Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clock-in');
-    // Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clock-out');
-    // Route::post('/attendance/break-in', [AttendanceController::class, 'breakIn'])->name('attendance.break-in');
-    // Route::post('/attendance/break-out', [AttendanceController::class, 'breakOut'])->name('attendance.break-out');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
 });
 
 // 管理者ゲスト（未ログイン）向けルート

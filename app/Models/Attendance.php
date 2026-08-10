@@ -23,6 +23,7 @@ class Attendance extends Model
         'date',
         'clock_in',
         'clock_out',
+        'new_breaks',
     ];
 
     /**
@@ -31,6 +32,9 @@ class Attendance extends Model
      */
     protected $casts = [
         'date' => 'date',
+        'clock_in' => 'datetime',
+        'clock_out' => 'datetime',
+        'new_breaks' => 'array',
     ];
 
     /**
