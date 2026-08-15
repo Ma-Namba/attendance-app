@@ -46,9 +46,15 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $status = $user->attendance_status; // 現在のステータスを取得
-        $today = Carbon::today()->toDateString(); // 本日の日付 (YYYY-MM-DD)
-        $now = Carbon::now();
+
+        $today = Carbon::now()->toDateString(); // 本日の日付 (YYYY-MM-DD)
+        $now = Carbon::parse(Carbon::now()->toDateTimeString());
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->where('date', 'LIKE', "{$today}%")
+            ->first();
+
+        $status = $attendance ? $attendance->getCurrentStatus() : '勤務外';
 
         // 画面のボタン（action属性）の値によって処理を分岐
         switch ($request->input('action')) {
@@ -93,26 +99,28 @@ class AttendanceController extends Controller
 
             // 3. 休憩開始処理
             case 'break_in':
-                if ($status !== '出勤中') {
+                // 💡 (string) を付与して型システムのミスマッチを解消
+                if ((string) $status !== '出勤中') {
                     return redirect()->back()->with('error', '休憩に入れる状態ではありません。');
                 }
 
-                $attendance = Attendance::where('user_id', $user->id)->where('date', $today)->first();
+                // 💡 LIKE演算子の前方一致により、SQLiteとMySQLの日付型ブレを完全に吸収
+                $attendance = Attendance::where('user_id', $user->id)
+                    ->where('date', 'LIKE', "{$today}%")
+                    ->first();
+
                 if (!$attendance) {
                     return redirect()->back()->with('error', '出勤データが見つかりません。');
                 }
 
-                // 親JSON用に、現在の時刻文字列を完全に固定のテキストとして抽出
-                // この文言がない場合、世界標準日時形式（UTC）にてデータが保存されてしまう(例：2026-08-10T10:13:03.240937Z)
                 $currentTimeString = $now->toTimeString(); // 例: "19:15:00"
 
                 DB::transaction(function () use ($attendance, $now, $currentTimeString) {
                     $attendanceBreak = $attendance->attendanceBreaks()->create([
+                        'attendance_id' => $attendance->id, // 💡 親IDを明示的に格納してSQLiteの制約違反を防止
                         'break_in' => $now,
                     ]);
 
-                    // $attendance->new_breaks が確実に「配列」であることを保証する
-                    // もし null や空文字列が入っていた場合は、強制的に空配列 [] にするため
                     $breaksArray = $attendance->new_breaks;
                     if (!is_array($breaksArray)) {
                         $breaksArray = [];
@@ -134,20 +142,21 @@ class AttendanceController extends Controller
 
             // 4. 休憩終了処理
             case 'break_out':
-                if ($status !== '休憩中') {
+                // 💡 休憩終了側にも (string) キャストを確実に適用し、テスト環境での弾きを完全封殺
+                if ((string) $status !== '休憩中') {
                     return redirect()->back()->with('error', '休憩から戻れる状態ではありません。');
                 }
 
-                $attendance = Attendance::where('user_id', $user->id)->where('date', $today)->first();
-                if (!$attendance) {
-                    return redirect()->back()->with('error', '出勤データが見つかりません。');
-                }
-
-                // 【重要】こちらも同様に、現在の時刻文字列を完全に固定のテキストとして抽出
                 $currentTimeString = $now->toTimeString();
 
                 DB::transaction(function () use ($attendance, $now, $currentTimeString) {
-                    $latestBreak = $attendance->attendanceBreaks()->whereNull('break_out')->latest()->first();
+                    // 💡 最新の休憩レコードの attendance_id の整合性を担保して更新
+                    $latestBreak = $attendance->attendanceBreaks()
+                        ->where('attendance_id', $attendance->id)
+                        ->whereNull('break_out')
+                        ->latest()
+                        ->first();
+
                     if ($latestBreak) {
                         $latestBreak->update([
                             'break_out' => $now,
