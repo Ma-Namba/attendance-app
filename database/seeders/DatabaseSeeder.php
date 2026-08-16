@@ -2,12 +2,13 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Attendance;
+use App\Models\Attendance_break;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,30 +17,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
         /**
          * 1. ユーザー情報の作成（固定アカウント）
          */
-
-        // ユーザー1（一般）
         $user1 = User::factory()->create([
             'name' => '一般ユーザー1',
             'email' => 'user1@example.com',
         ]);
 
-        // ユーザー2（一般）
         $user2 = User::factory()->create([
             'name' => '一般ユーザー2',
             'email' => 'user2@example.com',
         ]);
 
-        // ユーザー3（管理者）
         Admin::factory()->create([
             'name' => '管理者ユーザー3',
             'email' => 'user3@example.com',
@@ -50,47 +40,67 @@ class DatabaseSeeder extends Seeder
         /**
          * 2. 勤怠・休憩データの作成（実運用に近い日付分布）
          */
-
-        // 過去5ヶ月前（計6ヶ月分）から本日までの範囲を対象とする
         $startDate = Carbon::today()->subMonths(5)->startOfMonth();
         $endDate = Carbon::today();
 
-        // 開始日から本日まで1日ずつループ処理
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
 
-            // 実運用に合わせるため、土日はスキップして平日のみ生成
             if ($date->isWeekend()) {
                 continue;
             }
 
-            $dateStr = $date->toDateString(); // "2026-03-02" などの文字列を取得
+            $dateStr = $date->toDateString(); // "Y-m-d" 形式
 
             foreach ($generalUsers as $user) {
 
-                // 本日のデータはまだ退勤していない状態（出勤中）にするなど、実運用に合わせる
-                if ($date->isToday()) {
-                    // 本日は出勤打刻のみ（退勤なし・休憩なしの状態）
-                    Attendance::create([
+                // 複合UK [user_id, date] の衝突を完全に防ぐため、トランザクション内で処理
+                DB::transaction(function () use ($user, $date, $dateStr) {
+
+                    if ($date->isToday()) {
+                        // 本日は出勤打刻のみ（退勤なし・休憩なしの状態）
+                        Attendance::create([
+                            'user_id' => $user->id,
+                            'date' => $dateStr,
+                            'clock_in' => "{$dateStr} 09:00:00", // 厳格な19文字補完
+                            'clock_out' => null,
+                            'new_breaks' => [], // キャストを考慮し、空配列を明示
+                        ]);
+                        return; // 次のユーザーへ
+                    }
+
+                    // 通常勤務（12:00〜13:00に1時間休憩、18:00退勤）のデータ定義
+                    $clockInStr = "{$dateStr} 09:00:00";
+                    $breakInStr = "{$dateStr} 12:00:00";
+                    $breakOutStr = "{$dateStr} 13:00:00";
+                    $clockOutStr = "{$dateStr} 18:00:00";
+
+                    // 親JSON用のキャメルケース統一配列（フロント制約準拠）
+                    $newBreaksArray = [
+                        [
+                            'breakIn' => $breakInStr,
+                            'breakOut' => $breakOutStr,
+                        ]
+                    ];
+
+                    // 1. 親テーブル（attendances）の作成
+                    $attendance = Attendance::create([
                         'user_id' => $user->id,
                         'date' => $dateStr,
-                        'clock_in' => "{$dateStr} 09:00:00",
-                        'clock_out' => null,
+                        'clock_in' => $clockInStr,
+                        'clock_out' => $clockOutStr,
+                        'new_breaks' => $newBreaksArray, // モデルの $casts => 'array' で自動JSON化
                     ]);
-                    continue;
-                }
 
-                // --- 将来の拡張用（★user1 の意図的データ用のプレースホルダー） ---
-                if ($user->id === $user1->id) {
-                    // ここに将来、当月17日間の特殊パターン（残業・遅刻など）を判定するロジックを注入可能
-                    // 現フェーズでは、まずは一律で美しい通常勤務データを生成します
-                }
-
-                // 通常の勤怠データをファクトリー経由で生成（休憩も自動同期）
-                Attendance::factory()->create([
-                    'user_id' => $user->id,
-                    'date' => $date->toDateString(),
-                ]);
+                    // 2. 子テーブル（attendance_breaks）の物理作成（完全同期）
+                    // user_id は存在せず、親の attendance_id を明示流し込みしてNOT NULL制約違反を封殺
+                    Attendance_break::create([
+                        'attendance_id' => $attendance->id,
+                        'break_in' => $breakInStr,
+                        'break_out' => $breakOutStr,
+                    ]);
+                });
             }
         }
     }
 }
+
