@@ -23,9 +23,8 @@ use App\Models\Attendance;
 Route::middleware(['auth'])->group(function () {
     // 勤怠管理メイン画面（ログイン後のリダイレクト先）
     Route::get('/attendance', [AttendanceController::class, 'create'])->name('attendance.create');
-
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
-
+    Route::get('/attendance/list', [AttendanceController::class, 'index'])->name('attendance.index');
 });
 
 // 管理者ゲスト（未ログイン）向けルート
