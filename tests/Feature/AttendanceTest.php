@@ -233,5 +233,189 @@ class AttendanceTest extends TestCase
             'new_breaks' => [],
         ]);
     }
-}
 
+    /**
+     * @test
+     * 自分が行った勤怠情報が全て表示されている
+     */
+    public function test_自分が行った勤怠情報が全て表示されている(): void
+    {
+        // テストユーザーの作成とログイン
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // 他人のデータが混入しないことを検証するため、別のユーザーも作成
+        $otherUser = User::factory()->create();
+
+        // テスト実行月を「2026-08」に偽装固定
+        Carbon::setTestNow(Carbon::parse('2026-08-15 10:00:00'));
+
+        // ログインユーザーの勤怠データを2日分作成
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => "2026-08-01",
+            'clock_in' => "2026-08-01 09:00:00",
+            'clock_out' => "2026-08-01 18:00:00",
+            'new_breaks' => [],
+        ]);
+
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => "2026-08-02",
+            'clock_in' => "2026-08-02 09:00:00",
+            'clock_out' => "2026-08-02 18:00:00",
+            'new_breaks' => [],
+        ]);
+
+        // 他人の勤怠データを作成（一覧に表示されてはいけないデータ）
+        Attendance::create([
+            'user_id' => $otherUser->id,
+            'date' => "2026-08-01",
+            'clock_in' => "2026-08-01 09:00:00",
+            'clock_out' => "2026-08-01 18:00:00",
+            'new_breaks' => [],
+        ]);
+
+        // 【確定解決】確定したルート名を使用してURL「attendance/list」へリクエスト
+        $response = $this->get(route('attendance.index'));
+
+        $response->assertStatus(200);
+
+        // ビューに渡されたデータ（コレクション）を取得
+        $recordsCollection = $response->viewData('formattedAttendanceRecords');
+
+        // アサーション：自分のデータのみ（2件）が取得されていること
+        $this->assertCount(2, $recordsCollection);
+
+        // 純粋な多次元配列に完全に変換
+        $records = $recordsCollection->toArray();
+
+        // インデックスを指定して各レコードのクレンジング結果を厳格に検証
+        // 1レコード目（0番目）
+        $this->assertEquals('2026-08-01', $records[0]['date']);
+        $this->assertEquals('09:00', $records[0]['clock_in']);
+        $this->assertEquals('18:00', $records[0]['clock_out']);
+
+        // 2レコード目（1番目）
+        $this->assertEquals('2026-08-02', $records[1]['date']);
+
+        // 時間偽装をリセット
+        Carbon::setTestNow();
+    }
+
+    /**
+     * @test
+     * 勤怠一覧画面に遷移した際に現在の月が表示される
+     */
+    public function test_勤怠一覧画面に遷移した際に現在の月が表示される(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // 現在の時刻を「2026-08-17」に完全に固定
+        Carbon::setTestNow(Carbon::parse('2026-08-17 12:00:00'));
+
+        // 確定ルートでアクセス
+        $response = $this->get(route('attendance.index'));
+
+        $response->assertStatus(200);
+
+        // ビューに渡された $date を取得
+        $viewDate = $response->viewData('date');
+
+        // インポート元の違いによる判定泥沼化を防ぐため、Laravel標準のCarbonフルパスで厳格にアサーション
+        $this->assertInstanceOf(\Carbon\Carbon::class, $viewDate);
+        $this->assertEquals('2026-08-01', $viewDate->toDateString());
+
+        // 画面上に提供されたBladeの「2026/08」というテキストが含まれているか検証
+        $response->assertSee('2026/08');
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * @test
+     * 「前月」を押下した時に表示月の前月の情報が表示される
+     */
+    public function test_前月を押下した時に表示月の前月の情報が表示される(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-15 12:00:00'));
+
+        // 先月の通常データを1件仕込む
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => "2026-07-10",
+            'clock_in' => "2026-07-10 09:00:00",
+            'clock_out' => "2026-07-10 18:00:00",
+            'new_breaks' => [],
+        ]);
+
+        // 【確定解決】提供Bladeの「?date=...」の仕様とURLを完全に一致させて遷移
+        $response = $this->get(route('attendance.index', ['date' => '2026-07']));
+
+        $response->assertStatus(200);
+
+        // ビューに渡されたデータが 7 月のものかアサーション
+        $viewDate = $response->viewData('date');
+        $this->assertEquals('2026-07-01', $viewDate->toDateString());
+
+        // 文字列型前月・次月パラメータが月末バグを起こさずスライドしているか確認
+        $this->assertEquals('2026-06', $response->viewData('previousMonth'));
+        $this->assertEquals('2026-08', $response->viewData('nextMonth'));
+
+        // 7月のデータのみ（1件）が抽出されていることの検証
+        $recordsCollection = $response->viewData('formattedAttendanceRecords');
+        $this->assertCount(1, $recordsCollection);
+
+        $records = $recordsCollection->toArray();
+        $this->assertEquals('2026-07-10', $records[0]['date']);
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * @test
+     * 「翌月」を押下した時に表示月の翌月の情報が表示される
+     */
+    public function test_翌月を押下した時に表示月の翌月の情報が表示される(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-15 12:00:00'));
+
+        // 翌月（9月）のデータを1件仕込む
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => "2026-09-05",
+            'clock_in' => "2026-09-05 09:00:00",
+            'clock_out' => "2026-09-05 18:00:00",
+            'new_breaks' => [],
+        ]);
+
+        // 【確定解決】提供Bladeの「?date=...」の仕様とURLを完全に一致させて遷移
+        $response = $this->get(route('attendance.index', ['date' => '2026-09']));
+
+        $response->assertStatus(200);
+
+        // ビューに渡されたデータが 9 月のものかアサーション
+        $viewDate = $response->viewData('date');
+        $this->assertEquals('2026-09-01', $viewDate->toDateString());
+
+        $this->assertEquals('2026-08', $response->viewData('previousMonth'));
+        $this->assertEquals('2026-10', $response->viewData('nextMonth'));
+
+        // 9月のデータのみ（1件）が抽出されていることの検証
+        $recordsCollection = $response->viewData('formattedAttendanceRecords');
+        $this->assertCount(1, $recordsCollection);
+
+        $records = $recordsCollection->toArray();
+        $this->assertEquals('2026-09-05', $records[0]['date']);
+
+        Carbon::setTestNow();
+    }
+
+}
