@@ -9,6 +9,9 @@ use Carbon\Carbon;
 use Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Attendance_break;
+use App\Models\Application;
+use App\Http\Requests\ApplicationRequest;
+use App\Enums\ApprovalStatus;
 
 class AttendanceController extends Controller
 {
@@ -43,7 +46,22 @@ class AttendanceController extends Controller
         // 6. Bladeに渡す直前で、日付と時刻のフォーマットを強制クレンジング
         $formattedAttendanceRecords = $attendanceRecords->map(function ($attendance) {
 
+            // attendance_id を安全に抽出
+            $attendanceId = null;
+            if (is_object($attendance) && isset($attendance->id)) {
+                $attendanceId = $attendance->id;
+            } elseif (is_array($attendance) && isset($attendance['id'])) {
+                $attendanceId = $attendance['id'];
+            }
+
+            // 先頭に 'detail/' を付与することで、数値の0や空判定を完全に封殺すると同時にurlを整えます
+            $displayId = !empty($attendanceId)
+                ? 'detail/' . $attendanceId
+                : 'unrecorded/' . $cleanDate;
+
             return [
+                'id' => $displayId,
+
                 // 日付に「00:00:00」が混入しているのを排除し、"2026-07-01" の10文字にする
                 'date' => $attendance->date
                     ? Carbon::parse($attendance->date)->format('Y-m-d')
@@ -243,9 +261,137 @@ class AttendanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $user = Auth::user();
+
+        // 1. 【修正】リレーション 'applications' も一緒に安全に Eager Loading しておく
+        $attendance = Attendance::with(['attendanceBreaks', 'applications'])
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->firstOrFail(); // 他人のIDや存在しないIDはここで404
+
+        $attendanceDate = Carbon::parse($attendance->date);
+
+        // 休憩子テーブルから proposalBreaks 用の配列を生成 (秒数ノイズ H:i:s -> H:i 変換)
+        $cleanBreaks = $attendance->attendanceBreaks->map(function ($b) {
+            return [
+                'break_in' => $b->break_in ? Carbon::parse($b->break_in)->format('H:i') : null,
+                'break_out' => $b->break_out ? Carbon::parse($b->break_out)->format('H:i') : null,
+            ];
+        })->toArray();
+
+        // Attendanceモデルのカスタム属性（has_pending_application）と足並みを揃え、Enumキャストで判定
+        $pendingApplication = $attendance->applications()
+            ->where('approval_status', ApprovalStatus::PENDING)
+            ->latest()
+            ->first();
+
+        // 承認待ち申請があるなら申請中のコメントを、無いなら確定済（親テーブル）のコメントを画面に流し込む
+        $commentData = $pendingApplication
+            ? $pendingApplication->comments
+            : ($attendance->comment ?? '');
+
+
+        $applicationData = $pendingApplication ? $pendingApplication : null;
+        $commentData = $pendingApplication ? $pendingApplication->comments : '';
+
+        // 各値が empty (nullや空文字) の場合に Carbon::parse がクラッシュするのを防ぐ安全処理
+        $getClockIn = function () use ($pendingApplication, $attendance) {
+            if ($pendingApplication && !empty($pendingApplication->new_clock_in)) {
+                return Carbon::parse($pendingApplication->new_clock_in)->format('H:i');
+            }
+            return ($attendance && !empty($attendance->clock_in)) ? Carbon::parse($attendance->clock_in)->format('H:i') : '';
+        };
+
+        $getClockOut = function () use ($pendingApplication, $attendance) {
+            if ($pendingApplication && !empty($pendingApplication->new_clock_out)) {
+                return Carbon::parse($pendingApplication->new_clock_out)->format('H:i');
+            }
+            return ($attendance && !empty($attendance->clock_out)) ? Carbon::parse($attendance->clock_out)->format('H:i') : '';
+        };
+
+        $data = [
+            'id' => $attendance->id,
+            'year' => $attendanceDate->format('Y年'),
+            'date' => $attendanceDate->format('m月d日'),
+
+            // ★ 安全ガードを適用してマッピング
+            'clock_in' => $getClockIn(),
+            'clock_out' => $getClockOut(),
+
+            'newBreaks' => $attendance->new_breaks,
+            'breaks' => $cleanBreaks,
+            'application' => $applicationData,
+            'comment' => $commentData,
+        ];
+
+        // 2. 【最重要修正】丸ごと漏れていた return view を完全追加！
+        return view('user.user-detail', [
+            'viewDate' => $attendanceDate,
+            'data' => $data,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * 勤怠の修正申請処理（最終確定版）
+     */
+    public function storeApplication(ApplicationRequest $request, $id)
+    {
+        // 1. 対象の勤怠レコードを安全に取得
+        $attendance = Attendance::where('user_id', Auth::id())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // 2. 1勤怠につき承認待ちは最大1つの重複防止ルール
+        if ($attendance->has_pending_application) {
+            return redirect()->back()->withErrors(['error' => '既に承認待ちの修正申請が存在します。']);
+        }
+
+        // 3. トランザクションを張り、ER図通りのカラム名へマッピングして保存
+        DB::transaction(function () use ($request, $attendance) {
+
+            // ★【大逆転の修正】文字列の末尾の 's' を削除し、Bladeの name="new_break_in" に完全一致させます！
+            $newBreakIns = $request->input('new_break_in', []);  // sなしに変更
+            $newBreakOuts = $request->input('new_break_out', []); // sなしに変更
+            $cleanBreaks = [];
+
+            // 独立した2つの休憩配列を一対のデータに結合（ロジックは完璧です）
+            foreach ($newBreakIns as $index => $breakIn) {
+                $breakOut = $newBreakOuts[$index] ?? null;
+
+                if (!empty($breakIn) && !empty($breakOut)) {
+                    $cleanBreaks[] = [
+                        'break_in' => Carbon::parse($breakIn)->format('H:i'),
+                        'break_out' => Carbon::parse($breakOut)->format('H:i'),
+                    ];
+                }
+            }
+
+            // 親レコードの日付（Y-m-d 形式の文字列）を取得
+            $baseDate = $attendance->date->format('Y-m-d');
+
+            $attendance->applications()->create([
+                'user_id' => $attendance->user_id,
+                'new_clock_in' => $request->filled('new_clock_in')
+                    ? Carbon::parse($baseDate . ' ' . $request->input('new_clock_in'))->format('Y-m-d H:i:s')
+                    : null,
+                'new_clock_out' => $request->filled('new_clock_out')
+                    ? Carbon::parse($baseDate . ' ' . $request->input('new_clock_out'))->format('Y-m-d H:i:s')
+                    : null,
+
+                // ★【完全解決】キー名を proposalBreaks に修正し、配列のまま引き渡す
+                'proposalBreaks' => $cleanBreaks,
+
+                'comments' => $request->input('comment') ?? '',
+                'approval_status' => ApprovalStatus::PENDING,
+            ]);
+        });
+
+        // 4. 同詳細画面へ安全にリダイレクト
+        return redirect()->route('attendance.show', ['id' => $id])
+            ->with('success', '修正申請を送信しました。');
     }
 
     /**

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->datetime('clock_in')->nullable(); //出勤時刻
             $table->datetime('clock_out')->nullable(); //退勤時刻
             $table->json('new_breaks')->nullable();
+            $table->text('comment')->nullable();
             $table->timestamps();
 
             // 1ユーザー1日1レコードを保証する一意制約

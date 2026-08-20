@@ -144,7 +144,8 @@ erDiagram
         date date "※user_idとの複合UK"
         datetime clock_in
         datetime clock_out
-        json new_breaks
+        array new_breaks "※array型"
+        varchar_255 comment
         timestamp created_at
         timestamp updated_at
     }
@@ -155,7 +156,7 @@ erDiagram
         enum approval_status "※'承認待ち'/'承認済み'"
         datetime new_clock_in
         datetime new_clock_out
-        text proposalBreaks "※text型"
+        json proposalBreaks "※json型"
         varchar_255 comments
         timestamp created_at
         timestamp updated_at
