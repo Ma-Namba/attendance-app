@@ -15,8 +15,8 @@ class Application extends Model
     protected $fillable = [
         'attendance_id',
         'user_id',
-        'new_check_in',
-        'new_check_out',
+        'new_clock_in',
+        'new_clock_out',
         'proposalBreaks',
         'comment',
         'approval_status', //誤字修正

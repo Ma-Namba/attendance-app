@@ -25,6 +25,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'create'])->name('attendance.create');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/attendance/list', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/detail/{id}', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::post('/attendance/{id}', [AttendanceController::class, 'storeApplication'])->name('attendance.application.store');
+    // idデータがない打刻詳細に遷移した時の安全コード
+    Route::get('/attendance/unrecorded/{date}', [AttendanceController::class, 'showUnrecorded'])->name('attendance.unrecorded');
 });
 
 // 管理者ゲスト（未ログイン）向けルート

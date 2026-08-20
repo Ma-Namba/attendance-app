@@ -24,6 +24,7 @@ class Attendance extends Model
         'clock_in',
         'clock_out',
         'new_breaks',
+        'comment',
     ];
 
     /**
