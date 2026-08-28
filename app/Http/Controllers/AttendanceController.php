@@ -326,7 +326,7 @@ class AttendanceController extends Controller
             'comment' => $commentData,
         ];
 
-        // 2. 【最重要修正】丸ごと漏れていた return view を完全追加！
+        // 2. 【最重要修正】丸ごと漏れていた return view を追加
         return view('user.user-detail', [
             'viewDate' => $attendanceDate,
             'data' => $data,
@@ -391,7 +391,8 @@ class AttendanceController extends Controller
 
         // 4. 同詳細画面へ安全にリダイレクト
         return redirect()->route('attendance.show', ['id' => $id])
-            ->with('success', '修正申請を送信しました。');
+            ->with('success', '修正申請を送信しました。')
+            ->withInput();
     }
 
     /**
