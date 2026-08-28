@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AdminAuthController;
 use Laravel\Fortify\Fortify;
 use Carbon\Carbon;
@@ -29,6 +30,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/{id}', [AttendanceController::class, 'storeApplication'])->name('attendance.application.store');
     // idデータがない打刻詳細に遷移した時の安全コード
     Route::get('/attendance/unrecorded/{date}', [AttendanceController::class, 'showUnrecorded'])->name('attendance.unrecorded');
+    Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
+    Route::get('/application/{id}', [AttendanceController::class, 'show']);
 });
 
 // 管理者ゲスト（未ログイン）向けルート
