@@ -32,7 +32,7 @@ class Attendance extends Model
      * @var array<string,string>
      */
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'clock_in' => 'datetime',
         'clock_out' => 'datetime',
         'new_breaks' => 'array',

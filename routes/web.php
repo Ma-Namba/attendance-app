@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AdminAuthController;
 use Laravel\Fortify\Fortify;
@@ -40,7 +41,6 @@ Route::middleware(['guest:admin'])->prefix('admin')->name('admin.')->group(funct
     Route::get('/login', function () {
         return view('admin.admin-login');
     })->name('login');
-
     // ログイン処理実行
     Route::post('/login', [AdminAuthController::class, 'store']);
 });
@@ -50,16 +50,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->name('logout');
 
     // ログイン後のダッシュボード（遷移先）
-    Route::get('/admin/attendance/list', function () {
-        //ビューに渡すデータの取得
-        $date = Carbon::today();
-        $previousDay = $date->copy()->subDay();
-        $nextDay = $date->copy()->addDay();
-        $users = User::all();
-        $attendanceRecords = Attendance::all();
-
-        return view('admin.admin-attendance-list', compact('date', 'previousDay', 'nextDay', 'users', 'attendanceRecords')); // 管理者トップ画面
-    })->name('attendance.list');
+    Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index'])->name('attendance.index');
 });
 
 // 未ログイン時のトップページ（またはログイン画面へリダイレクト）
