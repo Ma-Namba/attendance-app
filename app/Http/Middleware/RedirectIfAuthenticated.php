@@ -23,7 +23,7 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 // adminガードでログイン済みの場合は管理者ダッシュボードへ
                 if ($guard === 'admin') {
-                    return redirect()->route('admin.attendance.list');
+                    return redirect()->route('admin.attendance.index');
                 }
 
                 // それ以外（一般ユーザー）は RouteServiceProvider::HOME （通常は /）へ

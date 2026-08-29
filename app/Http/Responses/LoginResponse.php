@@ -17,7 +17,7 @@ class LoginResponse implements LoginResponseContract
     {
         // 管理者ガード(admin)でログインしているか判定
         if (Auth::guard('admin')->check()) {
-            return redirect()->route('admin.attendance.list');
+            return redirect()->route('admin.attendance.index');
         }
 
         // 一般ユーザーのマイページ（勤怠画面）へリダイレクト
