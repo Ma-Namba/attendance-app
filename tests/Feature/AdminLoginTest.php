@@ -75,6 +75,6 @@ class AdminLoginTest extends TestCase
         $this->assertAuthenticated('admin');
 
         // 4. リダイレクト先（勤怠一覧ルート）かを検証
-        $response->assertRedirect(route('admin.attendance.list'));
+        $response->assertRedirect(route('admin.attendance.index'));
     }
 }
