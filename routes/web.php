@@ -50,7 +50,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->name('logout');
 
     // ログイン後のダッシュボード（遷移先）
-    Route::get('/admin/attendance/list', [AdminAttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/list', [AdminAttendanceController::class, 'index'])->name('attendance.index');
+
+    Route::get('/attendance/{id}', [AdminAttendanceController::class, 'show'])->name('attendance.show');
+
 });
 
 // 未ログイン時のトップページ（またはログイン画面へリダイレクト）
