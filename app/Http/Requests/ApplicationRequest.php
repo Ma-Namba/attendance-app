@@ -78,7 +78,7 @@ class ApplicationRequest extends FormRequest
     {
         return [
             // 1. 出勤時間の不適切チェック（形式エラー時）
-            'new_clock_in.date_format' => '出勤時間が不適切な値です',
+            'new_clock_in.date_format' => '出勤時間もしくは退勤時間が不適切な値です',
             'new_clock_in.required' => '出勤時間を入力してください。',
 
             // 2. 休憩時間の不適切チェック（終了が開始より前、または形式エラー時）

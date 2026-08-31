@@ -53,6 +53,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/attendance/list', [AdminAttendanceController::class, 'index'])->name('attendance.index');
 
     Route::get('/attendance/{id}', [AdminAttendanceController::class, 'show'])->name('attendance.show');
+    Route::patch('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
 
 });
 
