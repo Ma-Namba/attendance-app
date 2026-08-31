@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Attendance;
 use App\Models\User;
 use App\Enums\ApprovalStatus;
+use App\Http\Requests\ApplicationRequest;
 
 class AdminAttendanceController extends Controller
 {
@@ -84,8 +85,10 @@ class AdminAttendanceController extends Controller
             'attendanceBreaks' => function ($query) {
                 // 💡 休憩開始時間（break_in）が早い順（昇順）に並び替えてから取得する
                 $query->orderBy('break_in', 'asc');
-            }
+            },
+            'applications'
         ])->findOrFail($id);
+
         $user = User::findOrFail($attendance->user_id);
 
         // 最初から配列に変換してしまう！
@@ -99,6 +102,9 @@ class AdminAttendanceController extends Controller
         $baseDate = Carbon::parse($attendance->date);
         $recordArray['year'] = $baseDate->format('Y年');
         $recordArray['date'] = $baseDate->format('m月d日');
+
+        // カスタム属性の結果
+        $recordArray['has_pending_application'] = $attendance->has_pending_application;
 
         // 休憩データのクレンジングと統合
         $cleanBreaks = [];
@@ -117,5 +123,31 @@ class AdminAttendanceController extends Controller
                 'user'
             ));
         }
+    }
+    public function update(ApplicationRequest $request, $id)
+    {
+        $attendance = Attendance::findOrFail($id);
+
+        // 1. 安全対策：承認待ちロック
+        if ($attendance->has_pending_application) {
+            return redirect()->back()->withErrors(['error' => '承認待ちのため修正はできません。']);
+        }
+
+        // 💡 コントローラ内の validate() や時間比較の if文 は【全て削除】してスッキリさせます！
+        // なぜなら、画面から送られてきたデータはこの関数が始まった時点で「チェック合格済み」だからです。
+
+        // 2. データのdatetime変換と保存（合格した安全なデータをそのまま使います）
+        $baseDate = Carbon::parse($attendance->date)->format('Y-m-d');
+
+        $attendance->clock_in = Carbon::parse($baseDate . ' ' . $request->new_clock_in);
+        $attendance->clock_out = Carbon::parse($baseDate . ' ' . $request->new_clock_out);
+        $attendance->comment = $request->comment; // 要件1: 備考の保存
+
+        // （※ここに前回作成した「休憩データのクレンジングと保存処理」が入ります）
+
+        $attendance->save();
+
+        // 3. 要件5: メッセージを載せてリダイレクト
+        return redirect()->back()->with('success', '修正が反映されました');
     }
 }
