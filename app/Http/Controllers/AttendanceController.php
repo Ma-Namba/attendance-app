@@ -337,6 +337,7 @@ class AttendanceController extends Controller
     /**
      * 勤怠の修正申請処理（最終確定版）
      */
+    /*
     public function storeApplication(ApplicationRequest $request, $id)
     {
         // 1. 対象の勤怠レコードを安全に取得
@@ -394,6 +395,7 @@ class AttendanceController extends Controller
             ->with('success', '修正申請を送信しました。')
             ->withInput();
     }
+    */
 
     /**
      * Show the form for editing the specified resource.
