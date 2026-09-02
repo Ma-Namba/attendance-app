@@ -65,13 +65,21 @@ class AttendanceTest extends TestCase
         $response->assertSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
 
         // ==========================================
-        // 1. 出勤ボタンが正しく機能する ➔ 画面ステータスは「出勤中」に切り替わる
+        // 1. 出勤ボタンが正しく機能する ➔ 画面ステータスは「勤務外」から「出勤中」に切り替わる
         // ==========================================
         Carbon::setTestNow(Carbon::parse("{$this->testDate} 09:00:00", 'Asia/Tokyo'));
 
         config(['fortify.guard' => 'web']);
         $this->actingAs($user, 'web');
         Auth::shouldUse('web');
+
+        // 出勤ボタンを押す前に画面を取得し、「勤務外」であるか確認する
+        $beforeResponse = $this->get($createRoute);
+        $beforeResponse->assertStatus(200);
+        $beforeResponse->assertSee('<p class="attendance__status--item">勤務外</p>', false);
+
+        // 出勤ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
 
         $response = $this->post(route('attendance.store'), ['action' => 'clock_in']);
         $response->assertRedirect();
@@ -88,6 +96,13 @@ class AttendanceTest extends TestCase
         $response = $this->get($createRoute);
         $response->assertStatus(200);
         $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
+
+        // 出勤ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
+        // 退勤ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>', false);
+        // 休憩入ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
 
         // 親レコード特定
         $attendance = Attendance::where('user_id', $user->id)->where('date', 'LIKE', "{$this->testDate}%")->first();
@@ -116,6 +131,13 @@ class AttendanceTest extends TestCase
         $response = $this->get($createRoute);
         $response->assertSee('<p class="attendance__status--item">休憩中</p>', false);
 
+        // 休憩入ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
+        // 退勤ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>', false);
+        // 休憩戻ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--break-out" type="submit" name="action" value="break_out">休憩戻</button>', false);
+
         // ==========================================
         // 3. 休憩戻ボタンが正しく機能する（1回目：12:30:00）➔ 画面ステータスは「出勤中」へ戻る
         // ==========================================
@@ -138,6 +160,13 @@ class AttendanceTest extends TestCase
 
         $response = $this->get($createRoute);
         $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
+
+        // 出勤ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
+        // 退勤ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>', false);
+        // 休憩入ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
 
         // ==========================================
         // 4. 休憩・休憩戻は一日に何回でもできる（2回目：15:00:00 〜 15:15:00）
@@ -182,6 +211,13 @@ class AttendanceTest extends TestCase
         $response = $this->get($createRoute);
         $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
 
+        // 出勤ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
+        // 退勤ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>', false);
+        // 休憩入ボタンが表示されていることを検証
+        $response->assertSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
+
         // ==========================================
         // 5. 退勤ボタンが正しく機能する ➔ 打刻画面ステータスが「退勤済」に切り替わる
         // ==========================================
@@ -204,6 +240,13 @@ class AttendanceTest extends TestCase
 
         $response = $this->get($createRoute);
         $response->assertSee('<p class="attendance__status--item">退勤済</p>', false);
+
+        // 出勤ボタンが表示されていないことを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
+        // 退勤ボタンが表示されていることを検証
+        $response->assertDontSee('<button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>', false);
+        // 休憩入ボタンが表示されていることを検証
+        $response->assertDontSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
 
         $this->travelBack();
     }

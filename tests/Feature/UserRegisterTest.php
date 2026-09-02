@@ -76,7 +76,7 @@ class UserRegisterTest extends TestCase
         // 2. 登録処理を実行（CSRFはテスト環境では自動でハンドリングされます）
         $response = $this->post('/register', $registrationData);
 
-        // 3. データベースにユーザーが正しく保存されたか検証
+        // 3. データベースに登録したユーザー情報が保存されたか検証
         $this->assertDatabaseHas('users', [
             'name' => '山田 太郎',
             'email' => 'yamada@example.com',

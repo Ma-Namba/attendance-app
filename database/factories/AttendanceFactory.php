@@ -48,8 +48,8 @@ class AttendanceFactory extends Factory
                 // 日付と固定時間を結合して、固定休憩 12:00 - 13:00
                 $breakData = [
                     [
-                        'break_in' => '12:00:00',
-                        'break_out' => '13:00:00'
+                        'break_in' => now()->setTime(12, 0, 0)->format('Y-m-d H:i:s'),
+                        'break_out' => now()->setTime(13, 0, 0)->format('Y-m-d H:i:s'),
                     ]
                 ];
 
