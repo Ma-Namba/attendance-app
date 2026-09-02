@@ -18,6 +18,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Responses\LoginResponse; // 追加
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract; // 追加
+use Illuminate\Support\Facades\Auth;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -50,13 +51,19 @@ class FortifyServiceProvider extends ServiceProvider
         //     return Limit::perMinute(5)->by($request->session()->get('login.id'));
         // });
 
-        // リクエストURLに応じた設定の動的切り替え
-        if ($request->is('admin*') || $request->is('api/admin*')) {
+        // まず、URL自体が完全に管理者専用（admin/〜）であるか、
+        // または「共用URL（stamp_correction_request*）であり、かつ管理者だけがログインしている状態」かを厳密に判定します。
+        $isStrictAdminRoute = $request->is('admin*') || $request->is('api/admin*');
+        $isSharedRouteAndAdminOnly = $request->is('stamp_correction_request*') && \Auth::guard('admin')->check() && !\Auth::guard('web')->check();
+
+        if ($isStrictAdminRoute || $isSharedRouteAndAdminOnly) {
             config([
-                'fortify.guard' => 'admin',                     // 管理者用のガードを適用
-                'fortify.home' => RouteServiceProvider::ADMIN_HOME, // 管理者用のリダイレクト先
+                'fortify.guard' => 'admin',
+                'fortify.home' => RouteServiceProvider::ADMIN_HOME,
             ]);
         } else {
+            // 両方ログインしている場合、または一般ユーザーのみの場合は、安全のために「一般ユーザーの世界」を適用します。
+            // これにより、管理者が一般ユーザーとして打刻画面（/attendance）を操作する際、管理者のクッキーに邪魔されなくなります。
             config([
                 'fortify.guard' => 'web',
                 'fortify.home' => RouteServiceProvider::HOME,

@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\AdminApplicationController;
 use Laravel\Fortify\Fortify;
 use Carbon\Carbon;
 use App\Models\User;
@@ -31,10 +32,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 
     Route::get('/attendance/{id}', [AdminAttendanceController::class, 'show'])->name('attendance.show')->whereNumber('id');
     Route::get('/attendance/staff/{id}', [StaffController::class, 'show'])->name('staff.attendance.show');
-
     Route::patch('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
     Route::get('/staff/list', [StaffController::class, 'index'])->name('staff.index');
-
 });
 
 // 一般ユーザー認証向けルート
@@ -47,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/{id}', [AttendanceController::class, 'storeApplication'])->name('attendance.application.store')->whereNumber('id');
     // idデータがない打刻詳細に遷移した時の安全コード
     Route::get('/attendance/unrecorded/{date}', [AttendanceController::class, 'showUnrecorded'])->name('attendance.unrecorded');
-    Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
+    // Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
     Route::get('/application/{id}', [AttendanceController::class, 'show']);
 });
 
@@ -64,3 +63,7 @@ Route::middleware(['guest:admin'])->prefix('admin')->name('admin.')->group(funct
 
 // 未ログイン時のトップページ（またはログイン画面へリダイレクト）
 Route::redirect('/', '/login');
+
+Route::get('/stamp_correction_request/list', [AdminApplicationController::class, 'index'])
+    ->middleware('auth:admin,web')
+    ->name('admin.application.list');

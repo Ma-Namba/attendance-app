@@ -40,26 +40,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($formattedApplications as $application)
-                        @if ($application['approval_status'] === '承認待ち')
+                    @foreach ($applications as $application)
+                        @if ($application->approval_status === '承認待ち')
                             <tr class="table__row">
                                 <td class="table__description">
-                                    <p class="table__description--item">{{ $application['approval_status'] }}</p>
+                                    <p class="table__description--item">{{ $application->approval_status }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item">{{ $user->name }}</p>
+                                    <p class="table__description--item">{{ $application->user->name }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['date'] }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->AttendanceRecord->date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['comment'] ?? 'なし' }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application->comment }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['application_date'] }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->application_date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
+                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application->id) }}">詳細</a>
                                 </td>
                             </tr>
                         @endif
@@ -89,26 +89,26 @@
                             <p class="table__header--item">詳細</p>
                         </th>
                     </tr>
-                    @foreach ($formattedApplications as $application)
-                        @if ($application['approval_status'] === '承認済み')
+                    @foreach ($applications as $application)
+                        @if ($application->approval_status === '承認済み')
                             <tr class="table__row">
                                 <td class="table__description">
-                                    <p class="table__description--item">{{ $application['approval_status'] }}</p>
+                                    <p class="table__description--item">{{ $application->approval_status }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item">{{ $user->name }}</p>
+                                    <p class="table__description--item">{{ $application->user->name }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['date'] }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->AttendanceRecord->date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['comment'] ?? 'なし' }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application->comment }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ $application['application_date'] }}</p>
+                                    <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->application_date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
+                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application->id) }}">詳細</a>
                                 </td>
                             </tr>
                         @endif
