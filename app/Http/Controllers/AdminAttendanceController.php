@@ -95,8 +95,8 @@ class AdminAttendanceController extends Controller
         $recordArray = $attendance->toArray();
 
         // 配列のキーに対して、時間をクレンジングして入れる（エディタは怒りません）
-        $recordArray['clock_in'] = $attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : '未打刻';
-        $recordArray['clock_out'] = $attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : '未打刻';
+        $recordArray['clock_in'] = $attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : '';
+        $recordArray['clock_out'] = $attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : '';
 
         // 日付データも配列に安全に追加
         $baseDate = Carbon::parse($attendance->date);
@@ -113,6 +113,8 @@ class AdminAttendanceController extends Controller
                 'break_in' => $break->break_in ? Carbon::parse($break->break_in)->format('H:i') : '',
                 'break_out' => $break->break_out ? Carbon::parse($break->break_out)->format('H:i') : '',
             ];
+        }
+
             $recordArray['breaks'] = $cleanBreaks;
 
             // 変数名を合わせてBladeに渡す
@@ -122,7 +124,6 @@ class AdminAttendanceController extends Controller
                 'attendanceRecord',
                 'user'
             ));
-        }
     }
     public function update(ApplicationRequest $request, $id)
     {
