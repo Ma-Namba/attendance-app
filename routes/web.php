@@ -5,6 +5,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\StaffController;
 use Laravel\Fortify\Fortify;
 use Carbon\Carbon;
 use App\Models\User;
@@ -54,6 +55,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 
     Route::get('/attendance/{id}', [AdminAttendanceController::class, 'show'])->name('attendance.show');
     Route::patch('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
+    Route::get('/staff/list', [StaffController::class, 'index'])->name('staff.index');
 
 });
 
