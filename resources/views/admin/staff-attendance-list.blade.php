@@ -58,7 +58,7 @@
                     詳細
                 </a>
             @else
-                <span class="text-muted">未打刻</span>
+                <span class="text-muted">N/A</span>
             @endif
             </td>
         </tr>
