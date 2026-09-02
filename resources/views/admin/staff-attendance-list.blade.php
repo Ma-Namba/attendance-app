@@ -53,9 +53,13 @@
                 <p class="table__description--item">{{ $attendanceRecords['total_time'] ? \Carbon\Carbon::parse($attendanceRecords['total_time'])->format('G:i') : '' }}</p>
             </td>
             <td class="table__description">
-                @if (!empty($attendanceRecords['id']))
-                <a class="table__item--detail-link" href="{{ url('/attendance/' . $attendanceRecords['id']) }}">詳細</a>
-                @endif
+            @if (!empty($attendanceRecords['id']) && $attendanceRecords['id'] > 0)
+                <a class="table__item--detail-link" href="{{ route('admin.attendance.show', ['id' => $attendanceRecords['id']]) }}">
+                    詳細
+                </a>
+            @else
+                <span class="text-muted">未打刻</span>
+            @endif
             </td>
         </tr>
         @endforeach
