@@ -150,7 +150,9 @@ class AdminApplicationController extends Controller
         $app = new \stdClass();
         $app->id = $data->id;
         $app->comment = $data->comments ?? '備考なし';
-        $app->approval_status = isset($data->approval_status->value) ? $data->approval_status->value : (string) $data->approval_status;
+
+        $app->approval_status = ($data->approval_status instanceof \App\Enums\ApprovalStatus) ? $data->approval_status->value : (string) $data->approval_status;
+
 
         // 【Blade適合】new_date を Carbon インスタンスのまま渡す（Blade側で ->format() を実行するため）
         // new_clock_in（日時）の値を優先し、なければ元の勤怠日（date）を使用
@@ -179,10 +181,13 @@ class AdminApplicationController extends Controller
             return !empty($b->break_in);
         });
 
+        $layout = Auth::guard('admin')->check() ? 'layouts.admin-app' : 'layouts.app';
+
         // 3. Viewへの変数展開（userはリレーションから安全に取得）
         return view('admin.admin-application-detail', [
             'application' => $app,
             'user' => $data->attendance->user ?? null,
+            'layout' => $layout,
         ]);
     }
 

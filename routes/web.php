@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance/unrecorded/{date}', [AttendanceController::class, 'showUnrecorded'])->name('attendance.unrecorded');
     // Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
     Route::get('/application/{id}', [AttendanceController::class, 'show']);
+    Route::get('/user/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])->name('application.show');
 });
 
 // 管理者ゲスト（未ログイン）向けルート
@@ -71,8 +72,14 @@ Route::get('/stamp_correction_request/list', [AdminApplicationController::class,
 
 // 【共用】詳細画面を表示するルート（管理者・一般ユーザー両方がアクセス可能）
 Route::get('/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])
-    ->middleware('auth:admin,web'); // 💡 両方のガードを許可
+    ->middleware('auth:admin');
 
 // 【管理者専用】承認を実行するルート（Bladeの method="post" に合わせる）
+Route::get('/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])
+    ->middleware('auth:admin') // webを先に書くことで一般ユーザーの認証を安定化
+    ->name('admin.application.show');
+
 Route::post('/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'approve'])
-    ->middleware('auth:admin');    // 💡 実行は管理者のみに制限
+    ->middleware('auth:admin');
+
+

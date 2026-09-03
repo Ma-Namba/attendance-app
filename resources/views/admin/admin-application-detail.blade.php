@@ -1,4 +1,4 @@
-@extends('layouts.admin-app')
+@extends($layout)
 
 @section('css')
 @vite('resources/css/admin/admin-application-detail.css')
@@ -64,14 +64,17 @@
         </div> {{-- applied-form__content の閉じ --}}
 
         <div class="applied-form__button">
-            @if ($application->approval_status === '承認待ち')
-                @if (Auth::guard('admin')->check())
-                    <button class="applied-form__button--submit" type="submit">承認</button>
-                @else
-                    <p class="applied-form__item">承認待ち（閲覧のみ）</p>
-                @endif
-            @elseif ($application->approval_status === '承認済み')
-                <p class="applied-form__item">承認済み</p>
-            @endif
-        </div>
+    {{-- @if ($application->approval_status === '承認待ち') から以下に変更 --}}
+    @if (str_contains((string)$application->approval_status, '承認待ち'))
+        @if (Auth::guard('admin')->check())
+            <button class="applied-form__button--submit" type="submit">承認</button>
+        @else
+            <p class="applied-form__item">承認待ち（閲覧のみ）</p>
+        @endif
+    {{-- @elseif ($application->approval_status === '承認済み') から以下に変更 --}}
+    @elseif (str_contains((string)$application->approval_status, '承認済み'))
+        <p class="applied-form__item">承認済み</p>
+    @endif
+</div>
+
 @endsection
