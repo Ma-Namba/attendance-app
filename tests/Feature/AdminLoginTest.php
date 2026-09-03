@@ -19,7 +19,7 @@ class AdminLoginTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_一般ユーザーログイン画面でバリデーションメッセージの検証（異常系）(): void
+    public function test_管理者ログイン画面でバリデーションメッセージの検証（異常系）(): void
     {
         // 1. テスト用の管理者データを1件作成
         $admin = Admin::factory()->create([

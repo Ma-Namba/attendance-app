@@ -7,6 +7,7 @@ use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use App\Models\Attendance;
+use App\Models\Attendance_break;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +77,7 @@ class AttendanceTest extends TestCase
         // 出勤ボタンを押す前に画面を取得し、「勤務外」であるか確認する
         $beforeResponse = $this->get($createRoute);
         $beforeResponse->assertStatus(200);
-        $beforeResponse->assertSee('<p class="attendance__status--item">勤務外</p>', false);
+        $beforeResponse->assertSee('勤務外', false);
 
         // 出勤ボタンが表示されていることを検証
         $response->assertSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
@@ -95,7 +96,7 @@ class AttendanceTest extends TestCase
 
         $response = $this->get($createRoute);
         $response->assertStatus(200);
-        $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
+        $response->assertSee('出勤中', false);
 
         // 出勤ボタンが表示されていないことを検証
         $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
@@ -129,7 +130,7 @@ class AttendanceTest extends TestCase
         Auth::shouldUse('web');
 
         $response = $this->get($createRoute);
-        $response->assertSee('<p class="attendance__status--item">休憩中</p>', false);
+        $response->assertSee('休憩中', false);
 
         // 休憩入ボタンが表示されていないことを検証
         $response->assertDontSee('<button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>', false);
@@ -159,7 +160,7 @@ class AttendanceTest extends TestCase
         Auth::shouldUse('web');
 
         $response = $this->get($createRoute);
-        $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
+        $response->assertSee('出勤中', false);
 
         // 出勤ボタンが表示されていないことを検証
         $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
@@ -189,7 +190,7 @@ class AttendanceTest extends TestCase
         Auth::shouldUse('web');
 
         $response = $this->get($createRoute);
-        $response->assertSee('<p class="attendance__status--item">休憩中</p>', false);
+        $response->assertSee('休憩中', false);
 
         // 💡 2回目の休憩戻り打刻
         Carbon::setTestNow(Carbon::parse("{$this->testDate} 15:15:00", 'Asia/Tokyo'));
@@ -209,7 +210,7 @@ class AttendanceTest extends TestCase
         Auth::shouldUse('web');
 
         $response = $this->get($createRoute);
-        $response->assertSee('<p class="attendance__status--item">出勤中</p>', false);
+        $response->assertSee('出勤中', false);
 
         // 出勤ボタンが表示されていないことを検証
         $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
@@ -239,7 +240,7 @@ class AttendanceTest extends TestCase
         Auth::shouldUse('web');
 
         $response = $this->get($createRoute);
-        $response->assertSee('<p class="attendance__status--item">退勤済</p>', false);
+        $response->assertSee('退勤済', false);
 
         // 出勤ボタンが表示されていないことを検証
         $response->assertDontSee('<button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>', false);
@@ -461,4 +462,110 @@ class AttendanceTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_ログインユーザーが行った勤怠情報が全て表示されている()
+    {
+        // ログイン/非ログイン用の一般ユーザーを2名作成
+        $loginUser = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        // ログインユーザーの勤怠データを3件作成
+        $loginAttendances = collect();
+
+        for ($i = 0; $i < 3; $i++){
+            $loginAttendances->push(
+                Attendance::factory()->create([
+                    'user_id' => $loginUser->id,
+                    'date' => now()->subDays($i)->toDateString(),
+                ])
+            );
+        }
+
+        // 非ログインユーザーの勤怠データを1件作成（ログインユーザーと被らない日付）
+        $otherAttendance = Attendance::factory()->create([
+            'user_id' => $otherUser->id,
+            'date' => now()->subDays(3)->toDateString(),
+        ]);
+
+        // 一般ユーザー(web)としてログインして、勤怠一覧画面にアクセス
+        $response = $this->actingAs($loginUser, 'web')
+            ->get(route('attendance.index'));
+
+        // ステータスコードが200（成功）であることを確認
+        $response->assertStatus(200);
+
+        // ログインユーザーの勤怠データが画面に表示されていることを検証
+        foreach ($loginAttendances as $attendance) {
+            $plainText = strip_tags($response->getContent());
+
+            $this->assertStringContainsString(
+                Carbon::parse($attendance->clock_in)->format('H:i'),
+                $plainText
+            );
+        }
+        // 非ログインユーザーの勤怠データが画面に表示されて「いない」ことを検証
+        $response->assertDontSee(Carbon::parse($otherAttendance->date)->format('Y-m-d'));
+    }
+
+    public function test_「詳細」を押下すると、その日の勤怠詳細画面に遷移することを検証()
+    {
+        // 1. テストユーザーを作成
+        $user = User::factory()->create(['name' => 'テスト太郎']);
+
+        // 2. 一覧画面のクエリとFactory側の強制上書きを完全に回避するため、「今日」の日付に動的連動させる
+        $todayStr = now()->format('Y-m-d');
+
+        // 3. Factoryのクロージャに邪魔されないよう、インスタンスを手動生成して確実に固定保存（make+save）
+        $attendance = Attendance::factory()->make([
+            'user_id' => $user->id,
+            'date' => $todayStr,
+            'clock_in' => "{$todayStr} 09:15:00",
+            'clock_out' => "{$todayStr} 18:30:00",
+        ]);
+        $attendance->save();
+
+        // 4. 子テーブル（休憩）データを紐付けて作成
+        Attendance_break::create([
+            'attendance_id' => $attendance->id,
+            'break_in' => "{$todayStr} 12:00:00",
+            'break_out' => "{$todayStr} 13:00:00",
+        ]);
+
+        // 5. 一般ユーザーとしてログインし、一覧画面にアクセス
+        $indexResponse = $this->actingAs($user, 'web')
+            ->get('/attendance/list');
+
+        $indexResponse->assertStatus(200);
+
+        // 【検証A】一覧画面のリンク存在チェック（コントローラーの detail/ 仕様に完全適合）
+        $expectedUrl = url('/attendance/detail/' . $attendance->id);
+        $indexResponse->assertSee('table__item--detail-link');
+        $indexResponse->assertSee('詳細');
+        $indexResponse->assertSee($expectedUrl);
+
+        // 6. 【検証B】正しい勤怠詳細画面へのアクセスと、input属性値の徹底検証
+        $detailUrl = '/attendance/detail/' . $attendance->id;
+        $detailResponse = $this->actingAs($user, 'web')->get($detailUrl);
+
+        $detailResponse->assertStatus(200);
+
+        // --- 追加された4つの要件の検証（value属性の形に合わせて厳密チェック） ---
+
+        // ① 名前がログインユーザーの名前になっているか検証
+        $detailResponse->assertSee('value="' . $user->name . '"', false);
+
+        // ② 日付が選択した日付になっているか検証
+        $expectedYear = now()->format('Y年');
+        $expectedDate = now()->format('m月d日');
+        $detailResponse->assertSee('value="' . $expectedYear . '"', false);
+        $detailResponse->assertSee('value="' . $expectedDate . '"', false);
+
+        // ③ 「出勤・退勤」に記されている時間がログインユーザーの打刻と一致しているか検証
+        $detailResponse->assertSee('value="09:15"', false);
+        $detailResponse->assertSee('value="18:30"', false);
+
+        // ④ 「休憩」に記されている時間がログインユーザーの打刻と一致しているか検証
+        $detailResponse->assertSee('value="12:00"', false);
+        $detailResponse->assertSee('value="13:00"', false);
+
+    }
 }

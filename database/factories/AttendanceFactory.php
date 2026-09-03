@@ -24,11 +24,11 @@ class AttendanceFactory extends Factory
             'date' => null,    // シーダーから注入
             'clock_in' => function (array $attributes) {
                 $dateStr = $attributes['date'] ?? now()->format('Y-m-d');
-                $this->faker->dateTimeBetween("{$dateStr} 09:00:00", "{$dateStr} 10:00:00");
+                return $this->faker->dateTimeBetween("{$dateStr} 09:00:00", "{$dateStr} 10:00:00");
             },
             'clock_out' => function (array $attributes) {
                 $dateStr = $attributes['date'] ?? now()->format('Y-m-d');
-                $this->faker->dateTimeBetween("{$dateStr} 17:00:00", "{$dateStr} 18:00:00");
+                return $this->faker->dateTimeBetween("{$dateStr} 17:00:00", "{$dateStr} 18:00:00");
             },
         ];
     }
