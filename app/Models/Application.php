@@ -18,7 +18,7 @@ class Application extends Model
         'new_clock_in',
         'new_clock_out',
         'proposalBreaks',
-        'comment',
+        'comments',
         'approval_status', //誤字修正
     ];
 

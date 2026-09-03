@@ -294,7 +294,6 @@ class AttendanceController extends Controller
 
 
         $applicationData = $pendingApplication ? $pendingApplication : null;
-        $commentData = $pendingApplication ? $pendingApplication->comments : '';
 
         // 各値が empty (nullや空文字) の場合に Carbon::parse がクラッシュするのを防ぐ安全処理
         $getClockIn = function () use ($pendingApplication, $attendance) {
@@ -337,7 +336,7 @@ class AttendanceController extends Controller
     /**
      * 勤怠の修正申請処理（最終確定版）
      */
-    /*
+
     public function storeApplication(ApplicationRequest $request, $id)
     {
         // 1. 対象の勤怠レコードを安全に取得
@@ -385,7 +384,7 @@ class AttendanceController extends Controller
                 // ★【完全解決】キー名を proposalBreaks に修正し、配列のまま引き渡す
                 'proposalBreaks' => $cleanBreaks,
 
-                'comments' => $request->input('comment') ?? '',
+                'comments' => $request->input('comment') ?? '備考なし',
                 'approval_status' => ApprovalStatus::PENDING,
             ]);
         });
@@ -395,7 +394,7 @@ class AttendanceController extends Controller
             ->with('success', '修正申請を送信しました。')
             ->withInput();
     }
-    */
+
 
     /**
      * Show the form for editing the specified resource.
