@@ -34,6 +34,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/attendance/staff/{id}', [StaffController::class, 'show'])->name('staff.attendance.show');
     Route::patch('/attendance/{id}', [AdminAttendanceController::class, 'update'])->name('attendance.update');
     Route::get('/staff/list', [StaffController::class, 'index'])->name('staff.index');
+
 });
 
 // 一般ユーザー認証向けルート
@@ -67,3 +68,11 @@ Route::redirect('/', '/login');
 Route::get('/stamp_correction_request/list', [AdminApplicationController::class, 'index'])
     ->middleware('auth:admin,web')
     ->name('admin.application.list');
+
+// 【共用】詳細画面を表示するルート（管理者・一般ユーザー両方がアクセス可能）
+Route::get('/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])
+    ->middleware('auth:admin,web'); // 💡 両方のガードを許可
+
+// 【管理者専用】承認を実行するルート（Bladeの method="post" に合わせる）
+Route::post('/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'approve'])
+    ->middleware('auth:admin');    // 💡 実行は管理者のみに制限
