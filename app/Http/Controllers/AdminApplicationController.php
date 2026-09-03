@@ -138,11 +138,6 @@ class AdminApplicationController extends Controller
      */
     public function show($id)
     {
-        // 👇 【デバッグ1】ここを差し込み
-        $debugApp = \App\Models\Application::find($id);
-        if (!$debugApp) {
-            dd('そもそも applications テーブルに id:' . $id . ' のレコードが存在しません。');
-        }
         // 1. 管理者・一般ユーザーに応じた適切なリレーションでのデータ取得
         $query = Application::with(['attendance.user']);
         $data = Auth::guard('admin')->check()
@@ -186,10 +181,13 @@ class AdminApplicationController extends Controller
             return !empty($b->break_in);
         });
 
+        $layout = Auth::guard('admin')->check() ? 'layouts.admin-app' : 'layouts.app';
+
         // 3. Viewへの変数展開（userはリレーションから安全に取得）
         return view('admin.admin-application-detail', [
             'application' => $app,
             'user' => $data->attendance->user ?? null,
+            'layout' => $layout,
         ]);
     }
 

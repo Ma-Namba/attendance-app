@@ -1,4 +1,4 @@
-@extends('layouts.admin-app')
+@extends($layout)
 
 @section('css')
 @vite('resources/css/admin/admin-application-detail.css')
