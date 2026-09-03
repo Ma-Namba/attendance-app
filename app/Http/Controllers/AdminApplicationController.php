@@ -138,6 +138,11 @@ class AdminApplicationController extends Controller
      */
     public function show($id)
     {
+        // 👇 【デバッグ1】ここを差し込み
+        $debugApp = \App\Models\Application::find($id);
+        if (!$debugApp) {
+            dd('そもそも applications テーブルに id:' . $id . ' のレコードが存在しません。');
+        }
         // 1. 管理者・一般ユーザーに応じた適切なリレーションでのデータ取得
         $query = Application::with(['attendance.user']);
         $data = Auth::guard('admin')->check()
@@ -150,7 +155,9 @@ class AdminApplicationController extends Controller
         $app = new \stdClass();
         $app->id = $data->id;
         $app->comment = $data->comments ?? '備考なし';
-        $app->approval_status = isset($data->approval_status->value) ? $data->approval_status->value : (string) $data->approval_status;
+
+        $app->approval_status = ($data->approval_status instanceof \App\Enums\ApprovalStatus) ? $data->approval_status->value : (string) $data->approval_status;
+
 
         // 【Blade適合】new_date を Carbon インスタンスのまま渡す（Blade側で ->format() を実行するため）
         // new_clock_in（日時）の値を優先し、なければ元の勤怠日（date）を使用

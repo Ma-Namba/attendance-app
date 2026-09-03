@@ -59,7 +59,7 @@
                                     <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->application_date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application->id) }}">詳細</a>
+                                    <a class="table__item--detail-link" href="{{ url('/user/stamp_correction_request/approve/' . $application->id) }}">詳細</a>
                                 </td>
                             </tr>
                         @endif
@@ -108,7 +108,7 @@
                                     <p class="table__description--item" style="white-space: pre-wrap;">{{ \Carbon\Carbon::parse($application->application_date)->format('Y/m/d') }}</p>
                                 </td>
                                 <td class="table__description">
-                                    <a class="table__item--detail-link" href="{{ url('/application/' . $application->id) }}">詳細</a>
+                                    <a class="table__item--detail-link" href="{{ url('/user/stamp_correction_request/approve/' . $application->id) }}">詳細</a>
                                 </td>
                             </tr>
                         @endif
