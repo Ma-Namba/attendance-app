@@ -9,7 +9,7 @@
     <div class="detail__header">
         <h1 class="content__header--item">勤怠詳細</h1>
     </div>
-    <form class="applied-form" action="{{ url('/stamp_correction_request/approve/' . $application['id']) }}" method="post">
+    <form class="applied-form" action="{{ url('/stamp_correction_request/approve/' . $application->id) }}" method="post">
         @csrf
         <div class="applied-form__content">
             <div class="applied-form__group">
@@ -55,20 +55,23 @@
                     <input class="applied-form__input readonly" type="text" value="" readonly>
                 </div>
             </div>
-            <div class="applied-form__group">
+             <div class="applied-form__group">
                 <label class="applied-form__header">備考</label>
                 <div class="applied-form__input-group">
                     <textarea class="applied-form__textarea" name="comment" readonly>{{ $application->comment }}</textarea>
                 </div>
             </div>
-        </div>
+        </div> {{-- applied-form__content の閉じ --}}
+
         <div class="applied-form__button">
             @if ($application->approval_status === '承認待ち')
-            <button class="applied-form__button--submit" type="submit">承認</button>
+                @if (Auth::guard('admin')->check())
+                    <button class="applied-form__button--submit" type="submit">承認</button>
+                @else
+                    <p class="applied-form__item">承認待ち（閲覧のみ）</p>
+                @endif
             @elseif ($application->approval_status === '承認済み')
-            <p class="applied-form__item">承認済み</p>
+                <p class="applied-form__item">承認済み</p>
             @endif
         </div>
-    </form>
-</div>
 @endsection
