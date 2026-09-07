@@ -5,11 +5,12 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
+use App\Models\Application;
 use App\Enums\ApprovalStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
 
-class AttendanceApplicationTest extends TestCase
+class UserApplicationTest extends TestCase
 {
     use RefreshDatabase; // スキーマをテスト毎にクリーンアップ
 
@@ -43,7 +44,7 @@ class AttendanceApplicationTest extends TestCase
     }
 
     /** @test */
-    public function 修正申請が正しくapplicationsテーブルに保存されdatetime結合される()
+    public function 修正申請処理が実行される()
     {
         $user = User::factory()->create();
         $attendance = Attendance::factory()->create([
@@ -75,7 +76,7 @@ class AttendanceApplicationTest extends TestCase
         ]);
     }
 
-    public function test_勤怠詳細情報修正（一般ユーザー）時バリデーションメッセージ（出勤が退勤より後）()
+    public function test_勤怠詳細情報修正（一般ユーザー）時バリデーションエラーメッセージ（出勤が退勤より後）()
     {
         // ユーザーを作成
         $user = User::factory()->create();
@@ -110,7 +111,7 @@ class AttendanceApplicationTest extends TestCase
         ]);
     }
 
-    public function test_勤怠詳細情報修正（一般ユーザー）時バリデーションメッセージ（休憩入が戻より後）()
+    public function test_勤怠詳細情報修正（一般ユーザー）時バリデーションエラーメッセージ（休憩入が戻より後）()
     {
         // ユーザーを作成
         $user = User::factory()->create();
@@ -218,4 +219,51 @@ class AttendanceApplicationTest extends TestCase
             'comment' => '備考を記入してください',
         ]);
     }
+
+    public function 「承認待ち」にログインユーザーが行った申請が全て表示されていること()
+    {
+        // ログインユーザーを作成
+        $user = User::factory()->create();
+
+        // ログアウトユーザーを作成
+        $otherUser = User::factory()->create();
+
+        // ログインユーザー/ログアウトユーザーの承認待ち申請を作成
+        $userApplication = Application::factory()->create([
+            'user_id' => $user->id,
+            'approval_status' => '承認待ち',
+            'comments' => '自分の承認待ち申請理由です'
+        ]);
+        $otherApplication = Application::factory()->create([
+            'user_id' => $otherUser->id,
+            'approval_status' => '承認待ち',
+            'comments' => '他人の承認待ち申請理由です'
+        ]);
+
+        $userListUrl = '/stamp_correction_request/list';
+        $response = $this->actingAs($user, 'web')->get($userListUrl);
+
+        $response->assertStatus(200);
+        $response->assertSee('自分の承認待ち申請理由です');
+        $response->assertDontSee('他人の承認待ち申請理由です');
+    }
+
+    public function 承認済みのタブには承認済みが表示されている()
+    {
+        // ログインユーザーを作成
+        $user = User::factory()->create();
+
+        $approvedApp = Application::factory()->create([
+            'user_id' => $user->id,
+            'approval_status' => '承認済み',
+            'comments' => '自分の承認済み申請理由です'
+        ]);
+
+        $userListUrl = '/stamp_correction_request/list';
+        $response = $this->actingAs($user, 'web')->get($userListUrl);
+
+        $response->assertStatus(200);
+        $response->assertSee('自分の承認済み申請理由です');
+    }
+
 }
