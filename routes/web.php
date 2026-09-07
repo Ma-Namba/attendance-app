@@ -48,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
     // idデータがない打刻詳細に遷移した時の安全コード
     Route::get('/attendance/unrecorded/{date}', [AttendanceController::class, 'showUnrecorded'])->name('attendance.unrecorded');
     // Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
-    Route::get('/application/{id}', [AttendanceController::class, 'show']);
+    // Route::get('/application/{id}', [AttendanceController::class, 'show']);
     Route::get('/user/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])->name('application.show');
 });
 
