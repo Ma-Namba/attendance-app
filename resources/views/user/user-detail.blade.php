@@ -133,7 +133,7 @@
                     </div>
 
                     {{-- 休憩は「休憩」「休憩2」「休憩3」…とセクションを分けて表示 --}}
-                    @foreach($data['breaks'] as $index => $break)
+                    @foreach($data['newBreaks'] as $index => $break)
                         <div class="form__group">
                             <label class="form__header">{{ $index === 0 ? '休憩' : '休憩' . ($index + 1) }}</label>
                             <div class="form__input-group">

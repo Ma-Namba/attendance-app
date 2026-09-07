@@ -265,7 +265,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        // 1. 【修正】リレーション 'applications' も一緒に安全に Eager Loading しておく
+        // 1. リレーション 'applications' も一緒に安全に Eager Loading しておく
         $attendance = Attendance::with(['attendanceBreaks', 'applications'])
             ->where('user_id', $user->id)
             ->where('id', $id)
@@ -310,6 +310,15 @@ class AttendanceController extends Controller
             return ($attendance && !empty($attendance->clock_out)) ? Carbon::parse($attendance->clock_out)->format('H:i') : '';
         };
 
+        // ★【タイポ修正箇所】承認待ちの申請がある場合は `proposalBreaks`（配列）を取得する
+        $getNewBreaks = function () use ($pendingApplication) {
+            if ($pendingApplication && !empty($pendingApplication->proposalBreaks)) {
+                // すでに配列としてキャストされている想定（されていない場合は json_decode 等が必要）
+                return $pendingApplication->proposalBreaks;
+            }
+            return [];
+        };
+
         $data = [
             'id' => $attendance->id,
             'year' => $attendanceDate->format('Y年'),
@@ -319,13 +328,13 @@ class AttendanceController extends Controller
             'clock_in' => $getClockIn(),
             'clock_out' => $getClockOut(),
 
-            'newBreaks' => $attendance->new_breaks,
+            'newBreaks' => $getNewBreaks(),
             'breaks' => $cleanBreaks,
             'application' => $applicationData,
             'comment' => $commentData,
         ];
 
-        // 2. 【最重要修正】丸ごと漏れていた return view を追加
+        // 2. 丸ごと漏れていた return view を追加
         return view('user.user-detail', [
             'viewDate' => $attendanceDate,
             'data' => $data,
