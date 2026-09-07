@@ -213,7 +213,8 @@ class AdminApplicationController extends Controller
         try {
             // 2. 【解決】Enumオブジェクトを直接渡してステータスを更新
             $app->update([
-                'approval_status' => \App\Enums\ApprovalStatus::APPROVED // またはEnumのケース名（例: APPROVED）
+                'approval_status' => \App\Enums\ApprovalStatus::APPROVED,
+                'comments'  => $request->comments,
             ]);
 
             // 3. 元の勤怠レコードを更新
