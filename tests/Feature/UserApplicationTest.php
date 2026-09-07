@@ -220,22 +220,33 @@ class UserApplicationTest extends TestCase
         ]);
     }
 
-    public function 「承認待ち」にログインユーザーが行った申請が全て表示されていること()
+    public function test_「承認待ち」にログインユーザーが行った申請が全て表示されていること()
     {
         // ログインユーザーを作成
         $user = User::factory()->create();
+        $userAttendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-09-07'
+        ]);
 
         // ログアウトユーザーを作成
         $otherUser = User::factory()->create();
+        $otherAttendance = Attendance::factory()->create([
+            'user_id' => $otherUser->id,
+            'date' => '2026-09-07'
+        ]);
 
         // ログインユーザー/ログアウトユーザーの承認待ち申請を作成
         $userApplication = Application::factory()->create([
             'user_id' => $user->id,
+            'attendance_id' => $userAttendance->id,
             'approval_status' => '承認待ち',
             'comments' => '自分の承認待ち申請理由です'
         ]);
+
         $otherApplication = Application::factory()->create([
             'user_id' => $otherUser->id,
+            'attendance_id' => $otherAttendance->id,
             'approval_status' => '承認待ち',
             'comments' => '他人の承認待ち申請理由です'
         ]);
@@ -248,13 +259,18 @@ class UserApplicationTest extends TestCase
         $response->assertDontSee('他人の承認待ち申請理由です');
     }
 
-    public function 承認済みのタブには承認済みが表示されている()
+    public function test_承認済みのタブには承認済みが表示されている()
     {
         // ログインユーザーを作成
         $user = User::factory()->create();
+        $userAttendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => '2026-09-07'
+        ]);
 
         $approvedApp = Application::factory()->create([
             'user_id' => $user->id,
+            'attendance_id' =>$userAttendance->id,
             'approval_status' => '承認済み',
             'comments' => '自分の承認済み申請理由です'
         ]);
