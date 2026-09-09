@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\ApprovalStatus;
 
 class Application extends Model
 {
+    use HasFactory;
     /**
      * 複数代入を許可する属性
      *
