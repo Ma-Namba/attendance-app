@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\ApprovalStatus;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Application extends Model
 {
@@ -31,13 +32,13 @@ class Application extends Model
     ];
 
     // リレーション：親である勤怠データを取得（1対多の対になる相手）
-    public function attendance()
+    public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);
     }
 
     // リレーション：申請したユーザーを取得
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

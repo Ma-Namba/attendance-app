@@ -53,7 +53,7 @@ class AttendanceFactory extends Factory
                     ]
                 ];
 
-                // 1. 子テーブル (attendance_breaks) へ保存
+                // 1. 子テーブル (Attendance_break) へ保存
                 foreach ($breakData as $b) {
                     Attendance_break::create([
                         'attendance_id' => $attendance->id,

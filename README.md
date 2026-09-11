@@ -110,6 +110,7 @@ sail artisan test --coverage
 - Vite / Tailwind CSS 3.4
 - Laravel Fortify（認証）
 - phpMyAdmin
+- Larastan (PHPStan)
 
 ## ER図
 ```mermaid

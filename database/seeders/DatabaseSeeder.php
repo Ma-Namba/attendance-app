@@ -149,7 +149,7 @@ class DatabaseSeeder extends Seeder
                         'new_breaks' => $newBreaksArray,
                     ]);
 
-                    // 2. 子テーブル（attendance_breaks）の物理作成
+                    // 2. 子テーブル（Attendance_break）の物理作成
                     Attendance_break::create([
                         'attendance_id' => $attendance->id,
                         'break_in' => $breakInStr,
