@@ -8,7 +8,6 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 use Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\Attendance_break;
 use App\Models\Application;
 use App\Http\Requests\ApplicationRequest;
 use App\Enums\ApprovalStatus;

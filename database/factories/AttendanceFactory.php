@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Attendance_break;
+use App\Models\AttendanceBreak;
 use App\Models\Attendance;
 
 /**
@@ -53,9 +53,9 @@ class AttendanceFactory extends Factory
                     ]
                 ];
 
-                // 1. 子テーブル (Attendance_break) へ保存
+                // 1. 子テーブル (Attendance_breaks) へ保存
                 foreach ($breakData as $b) {
-                    Attendance_break::create([
+                    AttendanceBreak::create([
                         'attendance_id' => $attendance->id,
                         'break_in' => $b['break_in'],
                         'break_out' => $b['break_out'],
