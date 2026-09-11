@@ -7,7 +7,7 @@ use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use App\Models\Attendance;
-use App\Models\Attendance_break;
+use App\Models\AttendanceBreak;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -524,7 +524,7 @@ class AttendanceTest extends TestCase
         $attendance->save();
 
         // 4. 子テーブル（休憩）データを紐付けて作成
-        Attendance_break::create([
+        AttendanceBreak::create([
             'attendance_id' => $attendance->id,
             'break_in' => "{$todayStr} 12:00:00",
             'break_out' => "{$todayStr} 13:00:00",

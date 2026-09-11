@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\Attendance;
-use App\Models\Attendance_break;
+use App\Models\AttendanceBreak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -226,7 +226,7 @@ class AdminApplicationController extends Controller
             ]);
 
             // 4. 古い休憩データをクリア
-            Attendance_break::where('attendance_id', $at->id)->delete();
+            AttendanceBreak::where('attendance_id', $at->id)->delete();
 
             // 5. 【解決】休憩データを「日付 + 時刻」の日時形式に変換して保存
             // 新出勤日時（2026-09-01 09:00:00）から「日付（2026-09-01）」を抽出
@@ -245,7 +245,7 @@ class AdminApplicationController extends Controller
                             ? Carbon::parse($targetDate . ' ' . $breakOutTime)->toDateTimeString()
                             : null;
 
-                        Attendance_break::create([
+                        AttendanceBreak::create([
                             'attendance_id' => $at->id,
                             'break_in' => $breakInDateTime,
                             'break_out' => $breakOutDateTime,

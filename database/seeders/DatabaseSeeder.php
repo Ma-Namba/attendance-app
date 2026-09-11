@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Admin;
 use App\Models\Attendance;
-use App\Models\Attendance_break;
+use App\Models\AttendanceBreak;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -150,7 +150,7 @@ class DatabaseSeeder extends Seeder
                     ]);
 
                     // 2. 子テーブル（Attendance_break）の物理作成
-                    Attendance_break::create([
+                    AttendanceBreak::create([
                         'attendance_id' => $attendance->id,
                         'break_in' => $breakInStr,
                         'break_out' => $breakOutStr,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Attendance;
+use App\Models\AttendanceBreak;
 use App\Models\User;
 use App\Enums\ApprovalStatus;
 use App\Http\Requests\ApplicationRequest;
@@ -115,15 +116,15 @@ class AdminAttendanceController extends Controller
             ];
         }
 
-            $recordArray['breaks'] = $cleanBreaks;
+        $recordArray['breaks'] = $cleanBreaks;
 
-            // 変数名を合わせてBladeに渡す
-            $attendanceRecord = $recordArray;
+        // 変数名を合わせてBladeに渡す
+        $attendanceRecord = $recordArray;
 
-            return view('admin.admin-detail', compact(
-                'attendanceRecord',
-                'user'
-            ));
+        return view('admin.admin-detail', compact(
+            'attendanceRecord',
+            'user'
+        ));
     }
     public function update(ApplicationRequest $request, $id)
     {
@@ -134,7 +135,7 @@ class AdminAttendanceController extends Controller
             return redirect()->back()->withErrors(['error' => '承認待ちのため修正はできません。']);
         }
 
-        // 💡 コントローラ内の validate() や時間比較の if文 は【全て削除】してスッキリさせます！
+        // コントローラ内の validate() や時間比較の if文 は全て削除
         // なぜなら、画面から送られてきたデータはこの関数が始まった時点で「チェック合格済み」だからです。
 
         // 2. データのdatetime変換と保存（合格した安全なデータをそのまま使います）
@@ -144,11 +145,42 @@ class AdminAttendanceController extends Controller
         $attendance->clock_out = Carbon::parse($baseDate . ' ' . $request->new_clock_out);
         $attendance->comment = $request->comment; // 要件1: 備考の保存
 
-        // （※ここに前回作成した「休憩データのクレンジングと保存処理」が入ります）
+        // 【追加】休憩データの保存処理（1日何度でも取れる対応）
+        // 既存の休憩データを一度クリアして再登録するか、新規追加するかで書き方が変わりますが、
+        // 修正（上書き）画面であることを考慮し、一度その日の休憩をクリアして再登録する安全な方法をとります。
+        AttendanceBreak::where('attendance_id', $attendance->id)->delete();
+        $newBreaksArray = [];
 
-        $attendance->save();
+         // 開始時間の配列が存在するか確認
+        if ($request->has('new_break_in') && is_array($request->new_break_in)) {
+            foreach ($request->new_break_in as $index => $breakInTime) {
+                // 同じインデックスの終了時間を取得
+                $breakOutTime = $request->new_break_out[$index] ?? null;
 
-        // 3. 要件5: メッセージを載せてリダイレクト
-        return redirect()->back()->with('success', '修正が反映されました');
+                // 開始時間と終了時間の両方が入力されている場合のみ処理
+                if (!empty($breakInTime) && !empty($breakOutTime)) {
+                    // ① 個別テーブル（attendance_breaks）への保存
+                    $attendanceBreak = new \App\Models\AttendanceBreak();
+                    $attendanceBreak->attendance_id = $attendance->id;
+                    $attendanceBreak->break_in       = Carbon::parse($baseDate . ' ' . $breakInTime);
+                    $attendanceBreak->break_out      = Carbon::parse($baseDate . ' ' . $breakOutTime);
+                    $attendanceBreak->save();
+
+                    // ② 【追加】attendancesテーブルの new_breaks カラム（array型）に入れる配列データを構築
+                    $newBreaksArray[] = [
+                        'break_in'  => $breakInTime,
+                        'break_out' => $breakOutTime
+                    ];
+                }
+            }
+        }
+
+        // 構築した配列を、attendancesテーブルの new_breaks カラムに代入
+        $attendance->new_breaks = $newBreaksArray;
+
+            $attendance->save();
+
+            // 3. 要件5: メッセージを載せてリダイレクト
+            return redirect()->back()->with('success', '修正が反映されました');
     }
 }
