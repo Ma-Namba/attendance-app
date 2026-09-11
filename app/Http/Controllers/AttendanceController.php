@@ -44,7 +44,7 @@ class AttendanceController extends Controller
             ->get();
 
         // 6. Bladeに渡す直前で、日付と時刻のフォーマットを強制クレンジング
-        $formattedAttendanceRecords = $attendanceRecords->map(function ($attendance) {
+        $formattedAttendanceRecords = $attendanceRecords->map(function ($attendance) use ($cleanYearMonth) {
 
             // attendance_id を安全に抽出
             $attendanceId = null;
@@ -57,7 +57,7 @@ class AttendanceController extends Controller
             // 先頭に 'detail/' を付与することで、数値の0や空判定を完全に封殺すると同時にurlを整えます
             $displayId = !empty($attendanceId)
                 ? 'detail/' . $attendanceId
-                : 'unrecorded/' . $cleanDate;
+                : 'unrecorded/' . $cleanYearMonth;
 
             return [
                 'id' => $displayId,

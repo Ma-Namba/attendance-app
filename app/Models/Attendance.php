@@ -51,7 +51,7 @@ class Attendance extends Model
      */
     public function attendanceBreaks(): HasMany
     {
-        return $this->hasMany(attendance_break::class, 'attendance_id');
+        return $this->hasMany(Attendance_break::class, 'attendance_id');
     }
 
     /**
