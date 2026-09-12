@@ -69,7 +69,14 @@
         @csrf
             <input type="hidden" name="user_id" value="{{ $user->id }}">
             <input type="hidden" name="year_month" value="{{ $date->format('Y-m') }}">
-            <input class="csv-button__submit" type="submit" value="CSV出力">
+            <!-- disabled を追加し、スタイルをインラインで調整 -->
+            <input
+                class="csv-button__submit"
+                type="submit"
+                value="CSV出力（未実装）"
+                disabled
+                style="opacity: 0.6; cursor: not-allowed;"
+            >
         </form>
     </div>
 </div>
