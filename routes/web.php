@@ -50,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/stamp_correction_request/list', [ApplicationController::class, 'userShowApplication'])->name('user.application.list');
     // Route::get('/application/{id}', [AttendanceController::class, 'show']);
     Route::get('/user/stamp_correction_request/approve/{id}', [AdminApplicationController::class, 'show'])->name('application.show');
+    Route::get('/attendance/report', function () {
+        return response()->view('errors.501', [], 501);
+    });
 });
 
 // 管理者ゲスト（未ログイン）向けルート
