@@ -55,11 +55,11 @@ MAIL_PORT=1025
 
 ```
 ‌docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    laravelsail/php82-composer:latest \
-    composer install --ignore-platform-reqs
+-u "$(id -u):$(id -g)" \
+-v "$(pwd):/var/www/html" \
+-w /var/www/html \
+laravelsail/php82-composer:latest \
+composer install --ignore-platform-reqs
 # ※ Apple Silicon(M1/M2/M3/M4等)のMacをご利用の場合は、docker-compose.yml 内の mysql の項目に「platform: 'linux/amd64'」を追記。
 ```
 
